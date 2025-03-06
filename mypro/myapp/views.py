@@ -73,21 +73,6 @@ def addblind(request):
     return render(request, 'add_blind.html')
 
 
-def update_transaction(request, transaction_id):
-    # Fetch the transaction
-    transaction = get_object_or_404(Transaction, id=transaction_id)
-
-    if request.method == 'POST':
-        # Update the transaction
-        form = TransactionForm(request.POST, instance=transaction)
-        if form.is_valid():
-            form.save()
-            return redirect('transactions')  # Redirect to the transactions page
-    else:
-        # Display the form with existing data
-        form = TransactionForm(instance=transaction)
-
-    return render(request, 'update_transaction.html', {'form': form, 'transaction': transaction})
 
 
 # Update blind details
