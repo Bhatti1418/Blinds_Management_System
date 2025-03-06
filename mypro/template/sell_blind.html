@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Sell Blind</title>
+    <style>
+        body {
+            background: url('https://decorland.co.za/wp-content/uploads/2021/09/Vertical-Blinds-1-scaled.jpeg') no-repeat center center fixed;
+            background-size: cover;
+        }
+    </style>
+</head>
+
+<body class="bg-black bg-opacity-50 flex items-center justify-center h-screen relative">
+
+    <!-- Form Container -->
+    <div
+        class="bg-white bg-opacity-40 shadow-lg shadow-black/50 backdrop-blur-sm p-8 rounded-lg max-w-lg w-full mx-4 md:mx-0">
+        <p class="text-4xl font-semibold text-center mb-8">Blind Info</p>
+        <form id="blindForm">
+            {% csrf_token %}
+
+            <div class="grid grid-cols-2 gap-4">
+                <div class="relative">
+                    <label for="clientname" class="text-lg text-gray-800">Client Name</label>
+                    <input type="text" id="clientname" name="clientname" placeholder="Enter client name" required
+                        class="border placeholder-gray-400 focus:outline-none focus:border-indigo-500 w-full py-3 px-4 text-lg bg-white border-gray-300 rounded-md" />
+                </div>
+
+                <div class="relative">
+                    <label for="blindname" class="text-lg text-gray-800">Blind Name</label>
+                    <select id="blindname" name="blindname"
+                        class="border text-gray-400 focus:outline-none focus:border-indigo-500 w-full py-3 px-4 text-lg bg-white border-gray-300 rounded-md">
+                        <option value="">Select option</option>
+                    </select>
+                </div>
+
+                <div class="relative">
+                    <label for="length" class="text-lg text-gray-800">Length</label>
+                    <input type="number" id="length" name="length" placeholder="Enter length" required
+                        class="border placeholder-gray-400 focus:outline-none focus:border-indigo-500 w-full py-3 px-4 text-lg bg-white border-gray-300 rounded-md" />
+                </div>
+
+                <div class="relative">
+                    <label for="width" class="text-lg text-gray-800">Width</label>
+                    <input type="number" id="width" name="width" placeholder="Enter width" required
+                        class="border placeholder-gray-400 focus:outline-none focus:border-indigo-500 w-full py-3 px-4 text-lg bg-white border-gray-300 rounded-md" />
+                </div>
+            </div>
+
+            <!-- Buttons in the same row -->
+            <div class="flex justify-between mt-6">
+                <button type="button" id="addBlind"
+                    class="w-1/2 py-3 px-4 text-lg font-medium text-white bg-blue-500 rounded-md transition duration-200 hover:bg-blue-600 mr-2">
+                    Add Blind
+                </button>
+                <button type="button" id="completeTransaction"
+                    class="w-1/2 py-3 px-4 text-lg font-medium text-white bg-green-500 rounded-md transition duration-200 hover:bg-green-600">
+                    Complete Transaction
+                </button>
+            </div>
+        </form>
+
+        <!-- Blind List Section -->
+        <div id="blindList" class="mt-8 hidden">
+            <h2 class="text-2xl font-semibold text-center">Blinds Added</h2>
+            <table class="w-full border-collapse border border-gray-400 mt-4">
+                <thead>
+                    <tr class="bg-gray-300 text-gray-800">
+                        <th class="border border-gray-400 px-4 py-2">Client Name</th>
+                        <th class="border border-gray-400 px-4 py-2">Blind Name</th>
+                        <th class="border border-gray-400 px-4 py-2">Length</th>
+                        <th class="border border-gray-400 px-4 py-2">Width</th>
+                    </tr>
+                </thead>
+                <tbody id="blindItems" class="bg-white text-gray-900"></tbody>
+            </table>
+        </div>
+
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            fetch("/get-sales-data/")
+                .then(response => response.json())
+                .then(data => {
+                    populateDropdown("blindname", data.blinds);
+                })
+                .catch(error => console.error("Error fetching data:", error));
+        });
+
+        function populateDropdown(elementId, items) {
+            const dropdown = document.getElementById(elementId);
+            dropdown.innerHTML = '<option value="">Select option</option>';
+            items.forEach(item => {
+                const option = document.createElement("option");
+                option.value = item;
+                option.textContent = item;
+                dropdown.appendChild(option);
+            });
+        }
+
+        document.querySelectorAll("select").forEach(select => {
+            select.addEventListener("change", function () {
+                if (this.value) {
+                    this.classList.remove("text-gray-400");
+                    this.classList.add("text-black");
+                } else {
+                    this.classList.remove("text-black");
+                    this.classList.add("text-gray-400");
+                }
+            });
+        });
+
+        let blinds = [];
+        document.getElementById('addBlind').addEventListener('click', function () {
+            let clientName = document.getElementById('clientname').value.toUpperCase(); // Convert to uppercase
+            let blindName = document.getElementById('blindname').value;
+            let length = parseFloat(document.getElementById('length').value);
+            let width = parseFloat(document.getElementById('width').value);
+
+            if (!clientName) {
+                alert("Please enter a client name.");
+                return;
+            }
+
+            if (!blindName || !length || !width) {
+                alert("Fill all blind details.");
+                return;
+            }
+
+            blinds.push({ clientName, blindName, length, width });
+
+            if (blinds.length === 1) {
+                document.getElementById('blindList').classList.remove('hidden');
+            }
+
+            let row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${clientName}</td>
+                <td>${blindName}</td>
+                <td>${length}</td>
+                <td>${width}</td>
+            `;
+            document.getElementById('blindItems').appendChild(row);
+
+            // Clear input fields after adding the row
+            document.getElementById('blindname').value = "";
+            document.getElementById('length').value = "";
+            document.getElementById('width').value = "";
+        });
+
+        document.getElementById('completeTransaction').addEventListener('click', function () {
+            if (blinds.length === 0) {
+                alert("Add at least one blind.");
+                return;
+            }
+
+            fetch("/sellblind/", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": document.querySelector("[name=csrfmiddlewaretoken]").value
+                },
+                body: JSON.stringify({ clientName: blinds[0].clientName, blinds })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        alert(data.error);
+                    } else {
+                        window.location.href = data.redirect_url;
+                    }
+                })
+                .catch(error => console.error("Error:", error));
+        });
+    </script>
+
+</body>
+
+</html>

@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="id-ID">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/flowbite@1.4.4/dist/flowbite.min.js"></script>
+    <style>
+        body {
+            background: url('https://decorland.co.za/wp-content/uploads/2021/09/Vertical-Blinds-1-scaled.jpeg') no-repeat center center fixed;
+            background-size: cover;
+        }
+    </style>
+</head>
+<body class="bg-black bg-opacity-50 flex items-center justify-center h-screen relative">
+
+    <!-- Form Container -->
+    <div class="bg-white bg-opacity-75 p-8 rounded-lg shadow-2xl max-w-md w-full mx-4 md:mx-0">
+        <p class="text-4xl font-semibold text-center mb-8">Add Blind</p>
+        <form method="post" class="space-y-6">
+            {% csrf_token %}
+             <!-- Blindname Field -->
+            <div class="relative">
+                <label for="blindname" class="bg-white text-lg text-gray-600 absolute -mt-3 ml-3">Blind Name</label>
+                <input type="text" id="blindname" name="blindname" placeholder="Enter the blind name" required
+                       class="border placeholder-gray-400 focus:outline-none focus:border-indigo-500 w-full py-4 px-5 mt-3 text-lg bg-white border-gray-300 rounded-md" oninput="this.value = this.value.toUpperCase();" />
+            </div>
+            <!-- Quantity Field -->
+            <div class="relative">
+                <label for="quantity" class="bg-white text-lg text-gray-600 absolute -mt-3 ml-3">Quantity</label>
+                <input type="number" id="quantity" name="quantity" placeholder="Enter the quantity" required
+                       class="border placeholder-gray-400 focus:outline-none focus:border-indigo-500 w-full py-4 px-5 mt-3 text-lg bg-white border-gray-300 rounded-md"
+                       min="0" step="1" />
+            </div>
+             <!-- Price Field -->
+            <div class="relative">
+                <label for="price" class="bg-white text-lg text-gray-600 absolute -mt-3 ml-3">Price</label>
+                <input type="number" id="price" name="price" placeholder="Enter the price" required
+                       class="border placeholder-gray-400 focus:outline-none focus:border-indigo-500 w-full py-4 px-5 mt-3 text-lg bg-white border-gray-300 rounded-md"
+                       min="0" step="0.01" />
+            </div>
+            <!-- Entry Date Field -->
+            <div class="relative">
+                <label for="entry_date" class="bg-white text-lg text-gray-600 absolute -mt-3 ml-3">Entry Date</label>
+                <input type="date" id="entry_date" name="entry_date" required
+                       class="border placeholder-gray-400 focus:outline-none focus:border-indigo-500 w-full py-4 px-5 mt-3 text-lg bg-white border-gray-300 rounded-md" />
+            </div>
+            <!-- Submit Button -->
+            <div class="relative">
+                <button type="submit"
+                        class="w-full py-4 px-5 text-lg font-medium text-white bg-indigo-500 rounded-md transition duration-200 hover:bg-indigo-600">
+                    Submit
+                </button>
+            </div>
+        </form>
+    </div>
+
+</body>
+</html>

@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="id-ID">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/flowbite@1.4.4/dist/flowbite.min.js"></script>
+    <style>
+        body {
+            background: url('https://decorland.co.za/wp-content/uploads/2021/09/Vertical-Blinds-1-scaled.jpeg') no-repeat center center fixed;
+            background-size: cover;
+        }
+    </style>
+</head>
+<body class="bg-black bg-opacity-50 flex items-center justify-center h-screen relative">
+ <form method="POST" class="space-y-6">
+            {% csrf_token %}
+    <!-- Form Container -->
+    <div class="bg-white bg-opacity-90 p-8 rounded-xl shadow-2xl max-w-md w-full mx-4 md:mx-0 transform transition-all duration-300 hover:scale-105">
+        <!-- Form Header -->
+        <div class="text-center mb-8">
+            <h2 class="text-3xl font-bold text-gray-800">Update Blind</h2>
+            <p class="text-gray-600 mt-2">Edit the details of the blind below.</p>
+        </div>
+
+        <!-- Form -->
+
+
+            <!-- Blind Name Field -->
+            <div class="relative">
+                <label for="blindname" class="block text-sm font-medium text-gray-700 mb-1">Blind Name</label>
+                <input type="text" id="blindname" name="blindname" value="{{obj.blind_name}}" placeholder="Enter the blind name" required
+                       class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition duration-200" oninput="this.value = this.value.toUpperCase();" />
+            </div>
+
+            <!-- Purchased Blind Field -->
+            <div class="relative">
+                <label for="purchasedblind" class="block text-sm font-medium text-gray-700 mb-1">Purchased Blind</label>
+                <input type="number" id="purchasedblind" name="purchasedblind" value="{{obj.purchased_count}}" placeholder="Enter purchased blind count" required
+                       class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition duration-200" />
+            </div>
+
+            <!-- Total Quantity Field -->
+            <div class="relative">
+                <label for="totalquantity" class="block text-sm font-medium text-gray-700 mb-1">Total Quantity</label>
+                <input type="number" id="totalquantity" name="totalquantity" value="{{obj.blind_quantity}}" placeholder="Enter total quantity" required
+                       class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition duration-200" />
+            </div>
+
+            <!-- Remaining Quantity Field -->
+            <div class="relative">
+                <label for="remquantity" class="block text-sm font-medium text-gray-700 mb-1">Remaining Quantity</label>
+                <input type="number" id="remquantity" name="remquantity" value="{{obj.remaining_quantity}}" placeholder="Enter remaining quantity" required
+                       class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition duration-200" />
+            </div>
+
+            <!-- Price Field -->
+            <div class="relative">
+                <label for="price" class="block text-sm font-medium text-gray-700 mb-1">Price</label>
+                <input type="number" id="price" name="price" value="{{obj.blind_price}}" placeholder="Enter a price" required
+                       class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition duration-200" step="0.01" />
+            </div>
+
+            <!-- Entry Date Field -->
+            <div class="relative">
+                <label for="entrydate" class="block text-sm font-medium text-gray-700 mb-1">Entry Date</label>
+                <input type="date" id="entrydate" name="entrydate" value="{{obj.blind_entry_date|date:'Y-m-d'}}" required
+                       class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition duration-200" />
+            </div>
+
+            <!-- Submit Button -->
+            <div class="relative">
+                <button type="submit"
+                        class="w-full px-4 py-3 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition duration-200">
+                    Update Blind
+                </button>
+            </div>
+        </form>
+    </div>
+
+</body>
+</html>

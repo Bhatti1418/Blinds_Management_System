@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/flowbite@1.4.4/dist/flowbite.min.js"></script>
+    <title>Sign Up</title>
+</head>
+<body class="bg-white h-screen flex items-center justify-center">
+    <div class="flex flex-col lg:flex-row items-center justify-between w-full max-w-7xl">
+        <!-- Left: Image Section -->
+        <div class="hidden lg:block w-1/2">
+            <img src="https://res.cloudinary.com/macxenon/image/upload/v1631570592/Run_-_Health_qcghbu.png" alt="Illustration" class="max-h-96 mx-auto">
+        </div>
+        <!-- Right: Sign Up Form -->
+        <div class="w-full lg:w-1/2 max-w-xl bg-white shadow-2xl rounded-lg p-8">
+            <p class="text-4xl font-semibold text-center mb-8">Sign up for an account</p>
+            <form method="post" class="space-y-6">
+                {% csrf_token %}
+                <!-- Username Field -->
+                <div class="relative">
+                    <label for="username" class="bg-white text-lg text-gray-600 absolute -mt-3 ml-3">Username</label>
+                    <input type="text" id="username" name="username" placeholder="Username" required
+                           class="border placeholder-gray-400 focus:outline-none focus:border-indigo-500 w-full py-4 px-5 mt-3 text-lg bg-white border-gray-300 rounded-md" />
+                </div>
+                <!-- Password Field -->
+                <div class="relative">
+                    <label for="password" class="bg-white text-lg text-gray-600 absolute -mt-3 ml-3">Password</label>
+                    <input type="password" id="password" name="password" placeholder="Password" required
+                           class="border placeholder-gray-400 focus:outline-none focus:border-indigo-500 w-full py-4 px-5 mt-3 text-lg bg-white border-gray-300 rounded-md" />
+                </div>
+                <!-- Submit Button -->
+                <div class="relative">
+                    <button type="submit"
+                            class="w-full py-4 px-5 text-lg font-medium text-white bg-indigo-500 rounded-md transition duration-200 hover:bg-indigo-600">
+                        Sign Up
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Transactions</title>
+    <style>
+        body {
+            background-color: #f8f8f8;
+        }
+
+        /* Add alternating row colors */
+        tbody tr:nth-child(odd) {
+            background-color: #f9fafb; /* Light gray */
+        }
+
+        tbody tr:nth-child(even) {
+            background-color: #ffffff; /* White */
+        }
+
+        /* Hover effect on rows */
+        tbody tr:hover {
+            background-color: #edf2f7; /* Slightly darker gray */
+        }
+    </style>
+</head>
+
+<body class="min-h-screen flex flex-col items-center py-10 text-black">
+    <!-- Page Header -->
+    <header class="w-full text-center mb-10">
+        <h1 class="text-4xl font-bold">Blind Management System</h1>
+        <p class="text-gray-600 mt-2">Transactions</p>
+    </header>
+
+    <!-- Results Table -->
+    <div class="mt-12 w-full bg-white rounded-xl shadow-lg overflow-hidden">
+        <div class="p-6 px-0 pt-0 pb-2">
+            <table class="table-auto w-full border-collapse border border-gray-200">
+                <thead>
+                    <tr class="bg-blue-500 text-white">
+                        <th class="py-3 px-4 border">Customer Name</th>
+                        <th class="py-3 px-4 border">Blind Name</th>
+                        <th class="py-3 px-4 border">Width</th>
+                        <th class="py-3 px-4 border">Length</th>
+                        <th class="py-3 px-4 border">Square Foot</th>
+                        <th class="py-3 px-4 border">Price</th>
+                        <th class="py-3 px-4 border">Total</th>
+                        <th class="py-3 px-4 border">Payment Status</th>
+                        <th class="py-3 px-4 border">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if transactions %}
+                        {% for transaction in transactions %}
+                            {% for item in transaction.transactionitem_set.all %}
+                                <tr>
+                                    {% if forloop.first %}
+                                        <td class="text-center font-bold align-middle" rowspan="{{ transaction.transactionitem_set.all|length }}">
+                                            {{ transaction.client.person_name }}
+                                        </td>
+                                    {% endif %}
+                                    <td class="text-center py-3 px-4">{{ item.blind.blind_name }}</td>
+                                    <td class="text-center py-3 px-4">{{ item.width }}</td>
+                                    <td class="text-center py-3 px-4">{{ item.length }}</td>
+                                    <td class="text-center py-3 px-4">{{ item.square_foot }}</td>
+                                    <td class="text-center py-3 px-4">{{ item.price }}</td>
+                                    <td class="text-center py-3 px-4">{{ item.total_price }}</td>
+
+                                    {% if forloop.first %}
+                                        <td class="text-center align-middle py-3 px-4" rowspan="{{ transaction.transactionitem_set.all|length }}">
+                                            <select name="payment_status" class="border border-gray-300 rounded px-2 py-1">
+                                                <option value="Pending" {% if transaction.payment_status == "Pending" %}selected{% endif %}>
+                                                    Pending Payment
+                                                </option>
+                                                <option value="Paid" {% if transaction.payment_status == "Paid" %}selected{% endif %}>
+                                                    Payment Done
+                                                </option>
+                                            </select>
+                                        </td>
+                                        <td class="text-center align-middle py-3 px-4" rowspan="{{ transaction.transactionitem_set.all|length }}">
+                                            <a href="{% url 'myapp:generate_bill' transaction.id %}">
+                                                <button class="py-2 px-4 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition duration-200">
+                                                    Generate Bill
+                                                </button>
+                                            </a>
+                                        </td>
+                                    {% endif %}
+                                </tr>
+                            {% endfor %}
+                            <!-- Add a separator after each transaction -->
+                            <tr>
+                                <td colspan="9" class="border-t border-gray-300"></td>
+                            </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="9" class="text-center text-gray-500 py-6">
+                                No transactions available. Start by adding a new transaction.
+                            </td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Homepage Button -->
+    <div class="mt-8">
+        <a href="http://127.0.0.1:8000/">
+            <button class="py-2 px-4 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition duration-200">
+                Go to Homepage
+            </button>
+        </a>
+    </div>
+</body>
+
+</html>

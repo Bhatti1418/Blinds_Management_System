@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invoice</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @media print {
+            body { background: none; }
+            .no-print { display: none; }
+            .print-container { page-break-before: always; }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 p-8">
+    <div class="max-w-4xl mx-auto bg-white p-8 rounded-lg shadow-lg border border-gray-200 print-container">
+        <h2 class="text-3xl font-extrabold text-center text-orange-600 mb-2">A.R BLINDS</h2>
+        <p class="text-center text-gray-600 text-lg">The Right Price, The Right Blinds</p>
+
+        <div class="flex justify-between mt-6 text-lg">
+            <p><strong>Date:</strong> {{ date }}</p>
+            <p><strong>Invoice No:</strong> {{ invoice_no }}</p>
+        </div>
+        <p class="text-lg mt-2"><strong>M/S:</strong> {{ client_name }}</p>
+
+        <table class="w-full border-collapse border border-gray-300 mt-6 text-lg">
+            <thead>
+                <tr class="bg-orange-500 text-white">
+                    <th class="border border-gray-300 p-3">Blind Name</th>
+                    <th class="border border-gray-300 p-3">Width</th>
+                    <th class="border border-gray-300 p-3">Length</th>
+                    <th class="border border-gray-300 p-3">Square Foot</th>
+                    <th class="border border-gray-300 p-3">Price</th>
+                    <th class="border border-gray-300 p-3">Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in items %}
+                <tr class="bg-gray-100 hover:bg-gray-200 transition">
+                    <td class="border border-gray-300 p-3 text-center">{{ item.blind.blind_name }}</td>
+                    <td class="border border-gray-300 p-3 text-center">{{ item.width }}</td>
+                    <td class="border border-gray-300 p-3 text-center">{{ item.length }}</td>
+                    <td class="border border-gray-300 p-3 text-center">{{ item.square_foot }}</td>
+                    <td class="border border-gray-300 p-3 text-center">{{ item.price }}</td>
+                    <td class="border border-gray-300 p-3 text-center font-bold">{{ item.total_price }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <div class="mt-6 text-right text-lg font-semibold">
+            <p><strong>Total:</strong> <span class="text-orange-600">{{ total }}</span></p>
+            <p><strong>Advance:</strong> ______</p>
+            <p><strong>Balance:</strong> ______</p>
+        </div>
+
+        <div class="mt-8">
+            <p class="font-bold text-lg">Signature: <span class="border-b border-gray-400 w-40 inline-block"></span></p>
+        </div>
+
+        <div class="mt-6 text-center text-sm text-gray-600">
+            <p><strong>47-Main Ferozepur Road, Ichhra Lahore. Near Miraj Building</strong></p>
+            <p><strong>Call:</strong> 0309-6259116 | <strong>WhatsApp:</strong> 0323-4042830</p>
+        </div>
+    </div>
+</body>
+</html>
