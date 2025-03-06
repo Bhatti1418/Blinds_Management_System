@@ -58,6 +58,14 @@
             Search Blind
           </a>
         </li>
+        <li>
+          <a href="http://127.0.0.1:8000/search-transaction/" class="flex items-center gap-4 p-3 rounded-lg hover:bg-blue-500 hover:text-white">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4h8v8H4V4h8m0 16v-8m8 8H4m16 0v-8" />
+            </svg>
+            Search Transaction
+          </a>
+        </li>
 
       </ul>
 
@@ -131,8 +139,8 @@
             </svg>
           </div>
           <div class="p-4 text-right">
-            <p class="block antialiased font-sans text-sm leading-normal font-bold text-blue-gray-600">Total Blinds</p>
-            <h4 class="block antialiased tracking-normal font-sans text-2xl font-semibold leading-snug text-blue-gray-900">{{ total_blinds }} Rs</h4>
+            <p class="block antialiased font-sans text-sm leading-normal font-bold text-blue-gray-600">TOTAL AMT</p>
+            <h4 class="block antialiased tracking-normal font-sans text-2xl font-semibold leading-snug text-blue-gray-900">{{ sold_blinds }} Rs</h4>
           </div>
 
         </div>
@@ -143,8 +151,8 @@
             </svg>
           </div>
          <div class="p-4 text-right">
-            <p class="block antialiased font-sans text-sm leading-normal font-bold text-blue-gray-600">Sold Blinds</p>
-            <h4 class="block antialiased tracking-normal font-sans text-2xl font-semibold leading-snug text-blue-gray-900">{{ sold_blinds }} Rs</h4>
+            <p class="block antialiased font-sans text-sm leading-normal font-bold text-blue-gray-600">RECEIVED AMT</p>
+            <h4 class="block antialiased tracking-normal font-sans text-2xl font-semibold leading-snug text-blue-gray-900">{{ pending_orders }} Rs</h4>
         </div>
 
         </div>
@@ -155,8 +163,8 @@
             </svg>
           </div>
          <div class="p-4 text-right">
-          <p class="block antialiased font-sans text-sm leading-normal font-bold text-blue-gray-600">Pending Order</p>
-          <h4 class="block antialiased tracking-normal font-sans text-2xl font-semibold leading-snug text-blue-gray-900">{{ pending_orders }} Rs</h4>
+          <p class="block antialiased font-sans text-sm leading-normal font-bold text-blue-gray-600">PENDING AMT</p>
+          <h4 class="block antialiased tracking-normal font-sans text-2xl font-semibold leading-snug text-blue-gray-900">{{ total_blinds }} Rs</h4>
           </div>
 
         </div>

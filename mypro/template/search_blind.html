@@ -4,76 +4,96 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://cdn.tailwindcss.com"></script>
-    <title>Blind Management System</title>
+    <title>Search Blinds</title>
     <style>
-        body {
-            background-color: #2e0e47; /* Purple background */
+        /* Custom styles for alternating row colors */
+        tbody tr:nth-child(odd) {
+            background-color: #374151; /* Dark gray */
+        }
+
+        tbody tr:nth-child(even) {
+            background-color: #4b5563; /* Slightly lighter gray */
+        }
+
+        /* Hover effect on rows */
+        tbody tr:hover {
+            background-color: #6b7280; /* Lighter gray */
         }
     </style>
 </head>
-<body class="min-h-screen flex flex-col items-center py-10 text-gray-200">
+<body class="min-h-screen bg-gray-900 text-gray-200">
     <!-- Page Header -->
-    <form method="post" class="space-y-6">
-        {% csrf_token %}
-        <header class="w-full text-center mb-10">
-            <h1 class="text-4xl font-bold text-white">Blind Management System</h1>
-            <p class="text-gray-300 mt-2">Manage your blinds efficiently</p>
-        </header>
+    <header class="w-full text-center py-8 bg-indigo-600 text-white">
+        <h1 class="text-4xl font-bold">Blind Management System</h1>
+        <p class="text-lg mt-2">Search Blinds by Name</p>
+    </header>
 
-        <!-- Search Bar -->
-        <div class="w-4/5 max-w-4xl mb-10">
-            <div class="relative">
-                <input
-                    type="text" name="blindname"
-                    placeholder="Search for a blind by name..."
-                    class="w-full py-4 px-6 bg-white text-gray-800 rounded-lg shadow-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                />
-                <button
-                    class="absolute right-3 top-3 bg-indigo-500 text-white py-2 px-4 rounded-lg shadow hover:bg-indigo-600 transition">
-                    Search
-                </button>
-            </div>
+    <!-- Main Content -->
+    <div class="container mx-auto p-6">
+        <!-- Search Form -->
+        <div class="max-w-md mx-auto bg-gray-800 p-6 rounded-lg shadow-md">
+            <form action="{% url 'myapp:searchblind' %}" method="POST" class="space-y-4">
+                {% csrf_token %}
+                <div>
+                    <label for="blindname" class="block text-sm font-medium text-gray-300">Blind Name</label>
+                    <input type="text" id="blindname" name="blindname" placeholder="Enter blind name"
+                           class="mt-1 block w-full px-3 py-2 border border-gray-600 rounded-md shadow-sm bg-gray-700 text-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+                <div>
+                    <button type="submit"
+                            class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        Search Blinds
+                    </button>
+                </div>
+            </form>
         </div>
 
-        <!-- Results or Message -->
-        {% if message %}
-            <div class="text-center text-red-400 font-semibold">{{ message }}</div>
-        {% elif blinds %}
-            <!-- Results Table -->
-            <div class="w-4/5 max-w-5xl bg-gray-800 rounded-lg shadow-lg overflow-hidden">
-                <table class="table-auto w-full text-left border-collapse">
-                    <thead>
-                        <tr class="bg-indigo-600 text-white">
-                            <th class="px-6 py-4 font-medium">Blind Name</th>
-                            <th class="px-6 py-4 font-medium">Purchased Blind</th>
-                            <th class="px-6 py-4 font-medium">Total Quantity</th>
-                            <th class="px-6 py-4 font-medium">Remaining Quantity</th>
-                            <th class="px-6 py-4 font-medium">Total Square Foot</th>
-                            <th class="px-6 py-4 font-medium">Price</th>
-                            <th class="px-6 py-4 font-medium">Total Amount</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-gray-700">
-                        {% for b in blinds %}
-                        <tr class="hover:bg-indigo-700 transition">
-                            <td class="px-6 py-4 text-gray-300">{{ b.blind_name }}</td>
-                            <td class="px-6 py-4 text-gray-300">{{ b.purchased_count }}</td>
-                            <td class="px-6 py-4 text-gray-300">{{ b.blind_quantity }}</td>
-                            <td class="px-6 py-4 text-gray-300">{{ b.remaining_quantity }}</td>
-                            <td class="px-6 py-4 text-gray-300">{{ b.total_square_foot }}</td>
-                            <td class="px-6 py-4 text-gray-300">{{ b.blind_price }}</td>
-                            <td class="px-6 py-4 text-gray-300">{{ b.total_amount }}</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        {% endif %}
-    </form>
-<!-- Homepage Button -->
+        <!-- Results Section -->
+        <div class="mt-8">
+            {% if message %}
+                <div class="text-center text-red-400 font-semibold">{{ message }}</div>
+            {% elif blinds %}
+                <div class="bg-gray-800 rounded-lg shadow-md overflow-hidden">
+                    <table class="min-w-full">
+                        <thead class="bg-indigo-600 text-white">
+                            <tr>
+                                <th class="px-6 py-3 text-center text-sm font-medium uppercase">Blind Name</th>
+                                <th class="px-6 py-3 text-center text-sm font-medium uppercase">Purchased Blind</th>
+                                <th class="px-6 py-3 text-center text-sm font-medium uppercase">Total Quantity</th>
+                                <th class="px-6 py-3 text-center text-sm font-medium uppercase">Remaining Quantity</th>
+                                <th class="px-6 py-3 text-center text-sm font-medium uppercase">Total Square Foot</th>
+                                <th class="px-6 py-3 text-center text-sm font-medium uppercase">Price</th>
+                                <th class="px-6 py-3 text-center text-sm font-medium uppercase">Total Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-700">
+                            {% for b in blinds %}
+                                <tr class="hover:bg-gray-700 transition">
+                                    <td class="px-6 py-4 text-center">{{ b.blind_name }}</td>
+                                    <td class="px-6 py-4 text-center">{{ b.purchased_count }}</td>
+                                    <td class="px-6 py-4 text-center">{{ b.blind_quantity }}</td>
+                                    <td class="px-6 py-4 text-center">{{ b.remaining_quantity }}</td>
+                                    <td class="px-6 py-4 text-center">{{ b.total_square_foot }}</td>
+                                    <td class="px-6 py-4 text-center">{{ b.blind_price }}</td>
+                                    <td class="px-6 py-4 text-center">{{ b.total_amount }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="mt-8 bg-indigo-600 text-white py-4 text-center">
+        <p>&copy; 2023 Blind Management System. All rights reserved.</p>
+    </footer>
+
+    <!-- Homepage Button -->
     <div class="mt-8">
         <a href="http://127.0.0.1:8000/">
-            <button class="py-2 px-4 bg-blue-500 text-white rounded-md hover:bg-blue-600">
+            <button class="py-2 px-4 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition duration-200">
                 Go to Homepage
             </button>
         </a>

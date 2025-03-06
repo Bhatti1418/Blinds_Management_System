@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Search Transactions</title>
+    <style>
+        /* Custom styles for alternating row colors */
+        tbody tr:nth-child(odd) {
+            background-color: #374151; /* Dark gray */
+        }
+
+        tbody tr:nth-child(even) {
+            background-color: #4b5563; /* Slightly lighter gray */
+        }
+
+        /* Hover effect on rows */
+        tbody tr:hover {
+            background-color: #6b7280; /* Lighter gray */
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-gray-900 text-gray-200">
+    <!-- Page Header -->
+    <header class="w-full text-center py-8 bg-indigo-600 text-white">
+        <h1 class="text-4xl font-bold">Blind Management System</h1>
+        <p class="text-lg mt-2">Search Transactions by Client Name</p>
+    </header>
+
+    <!-- Main Content -->
+    <div class="container mx-auto p-6">
+        <!-- Search Form -->
+        <div class="max-w-md mx-auto bg-gray-800 p-6 rounded-lg shadow-md">
+            <form action="{% url 'myapp:search_transaction' %}" method="POST" class="space-y-4">
+                {% csrf_token %}
+                <div>
+                    <label for="clientname" class="block text-sm font-medium text-gray-300">Client Name</label>
+                    <input type="text" id="clientname" name="clientname" placeholder="Enter client name"
+                           class="mt-1 block w-full px-3 py-2 border border-gray-600 rounded-md shadow-sm bg-gray-700 text-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                           value="{{ request.POST.clientname }}">
+                </div>
+                <div>
+                    <button type="submit"
+                            class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        Search Transactions
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Results Section -->
+        <div class="mt-8">
+            {% if transactions %}
+                <div class="bg-gray-800 rounded-lg shadow-md overflow-hidden">
+                    <table class="min-w-full">
+                        <thead class="bg-indigo-600 text-white">
+                            <tr>
+                                <th class="px-6 py-3 text-center text-sm font-medium uppercase">Date</th>
+                                <th class="px-6 py-3 text-center text-sm font-medium uppercase">Customer Name</th>
+                                <th class="px-6 py-3 text-center text-sm font-medium uppercase">Blind Name</th>
+                                <th class="px-6 py-3 text-center text-sm font-medium uppercase">Width</th>
+                                <th class="px-6 py-3 text-center text-sm font-medium uppercase">Length</th>
+                                <th class="px-6 py-3 text-center text-sm font-medium uppercase">Square Foot</th>
+                                <th class="px-6 py-3 text-center text-sm font-medium uppercase">Price</th>
+                                <th class="px-6 py-3 text-center text-sm font-medium uppercase">Total</th>
+                                <th class="px-6 py-3 text-center text-sm font-medium uppercase">Payment Status</th>
+                                <th class="px-6 py-3 text-center text-sm font-medium uppercase">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-700">
+                            {% for transaction in transactions %}
+                                {% for item in transaction.transactionitem_set.all %}
+                                    <tr class="hover:bg-gray-700 transition">
+                                        {% if forloop.first %}
+                                            <td class="px-6 py-4 text-center font-bold align-middle" rowspan="{{ transaction.transactionitem_set.all|length }}">
+                                                {{ transaction.created_at|date:"d/m/Y" }} <!-- Display transaction date -->
+                                            </td>
+                                            <td class="px-6 py-4 text-center font-bold align-middle" rowspan="{{ transaction.transactionitem_set.all|length }}">
+                                                {{ transaction.client.person_name }}
+                                            </td>
+                                        {% endif %}
+                                        <td class="px-6 py-4 text-center">{{ item.blind.blind_name }}</td>
+                                        <td class="px-6 py-4 text-center">{{ item.width }}</td>
+                                        <td class="px-6 py-4 text-center">{{ item.length }}</td>
+                                        <td class="px-6 py-4 text-center">{{ item.square_foot }}</td>
+                                        <td class="px-6 py-4 text-center">{{ item.price }}</td>
+                                        <td class="px-6 py-4 text-center">{{ item.total_price }}</td>
+
+                                        {% if forloop.first %}
+                                            <td class="px-6 py-4 text-center align-middle" rowspan="{{ transaction.transactionitem_set.all|length }}">
+                                                <form action="{% url 'myapp:update_payment_status' transaction.id %}" method="POST" class="inline-form">
+                                                    {% csrf_token %}
+                                                    <input type="hidden" name="clientname" value="{{ request.POST.clientname }}">
+                                                    <select name="payment_status" class="border border-gray-300 rounded px-2 py-1 text-sm bg-gray-700 text-gray-200"
+                                                            {% if transaction.payment_status == "Paid" %}disabled{% endif %}>
+                                                        <option value="Pending" {% if transaction.payment_status == "Pending" %}selected{% endif %}>
+                                                            Pending Payment
+                                                        </option>
+                                                        <option value="Paid" {% if transaction.payment_status == "Paid" %}selected{% endif %}>
+                                                            Payment Done
+                                                        </option>
+                                                    </select>
+                                                    <button type="submit" class="hidden">Update</button>
+                                                </form>
+                                            </td>
+                                            <td class="px-6 py-4 text-center align-middle" rowspan="{{ transaction.transactionitem_set.all|length }}">
+                                                <a href="{% url 'myapp:generate_bill' transaction.id %}"
+                                                   class="inline-block bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md transition duration-200">
+                                                    Generate Bill
+                                                </a>
+                                            </td>
+                                        {% endif %}
+                                    </tr>
+                                {% endfor %}
+                                <!-- Add a separator after each transaction -->
+                                <tr>
+                                    <td colspan="10" class="border-t border-gray-600"></td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% elif message %}
+                <div class="text-center text-red-400 font-semibold">{{ message }}</div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="mt-8 bg-indigo-600 text-white py-4 text-center">
+        <p>&copy; 2023 Blind Management System. All rights reserved.</p>
+    </footer>
+
+    <!-- Homepage Button -->
+    <div class="fixed bottom-4 left-4">
+        <a href="http://127.0.0.1:8000/">
+            <button class="py-2 px-4 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition duration-200">
+                Go to Homepage
+            </button>
+        </a>
+    </div>
+
+    <!-- JavaScript to Submit the Form Automatically -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Find all payment status dropdowns
+            const paymentStatusDropdowns = document.querySelectorAll('select[name="payment_status"]');
+
+            // Add an event listener to each dropdown
+            paymentStatusDropdowns.forEach(dropdown => {
+                dropdown.addEventListener('change', function() {
+                    // Submit the form when the dropdown value changes
+                    this.closest('form').submit();
+                });
+            });
+        });
+    </script>
+</body>
+</html>

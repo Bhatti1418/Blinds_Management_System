@@ -106,10 +106,10 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+# Set the correct timezone for your location (e.g., Asia/Karachi for Pakistan)
+TIME_ZONE = 'Asia/Karachi'
 
-USE_I18N = True
-
+# Enable timezone support
 USE_TZ = True
 
 

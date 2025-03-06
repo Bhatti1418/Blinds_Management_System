@@ -13,6 +13,7 @@ from datetime import datetime
 from django.db.models import F
 from itertools import groupby
 from django.http import JsonResponse
+from django.utils import timezone
 from django.db.models import Sum
 
 # Homepage view
@@ -193,6 +194,15 @@ def sellblind(request):
         return JsonResponse({'error': "Invalid JSON data"}, status=400)
 
 
+def get_blind_quantity(request):
+    blind_name = request.GET.get('blind_name')
+    blind = Blind.objects.filter(blind_name__iexact=blind_name).first()
+    if blind:
+        return JsonResponse({'remaining_quantity': blind.remaining_quantity})
+    else:
+        return JsonResponse({'error': 'Blind not found'}, status=404)
+
+
 # Search blinds by name
 def searchblind(request):
     blinds = None
@@ -211,17 +221,43 @@ def searchblind(request):
     return render(request, 'search_blind.html', {'blinds': blinds, 'message': message})
 
 
-def update_payment_status(request, id):
-    # Get the transaction by id
-    transaction = Transaction.objects.get(id=id)
+def searchtransaction(request):
+    transactions = None
+    message = None
 
     if request.method == 'POST':
+        client_name = request.POST.get("clientname", "").strip()
+
+        if client_name:
+            transactions = Transaction.objects.filter(Q(client__person_name__icontains=client_name))
+            if not transactions.exists():
+                message = "No transactions found for this client."
+        else:
+            message = "Please enter a client name to search."
+
+    return render(request, 'searchtransaction.html', {'transactions': transactions, 'message': message})
+
+
+
+def update_payment_status(request, id):
+    if request.method == 'POST':
+        # Get the transaction by id
+        transaction = get_object_or_404(Transaction, id=id)
+
+        # Get the new payment status from the form
         payment_status = request.POST.get('payment_status')
+
+        # Validate the payment status
+        if payment_status not in ['Pending', 'Paid']:
+            return HttpResponseBadRequest("Invalid payment status.")
+
+        # Update the payment status
         transaction.payment_status = payment_status
         transaction.save()
 
-    # Redirect back to the transactions page after updating the status
-    return redirect('myapp:transactions')
+    # Redirect back to the searchtransaction page after updating the status
+    return redirect('myapp:homepage')
+
 
 def transactions_view(request):
     transactions = Transaction.objects.prefetch_related('transactionitem_set').select_related('client')
@@ -236,9 +272,12 @@ def generate_bill(request, transaction_id):
     # Calculate the total price
     total = sum(item.total_price for item in items)
 
+    # Convert the transaction date to the local timezone
+    local_date = timezone.localtime(transaction.created_at)
+
     # Prepare context for the template
     context = {
-        'date': transaction.created_at.strftime('%d/%m/%Y'),  # Use created_at
+        'date': local_date.strftime('%d/%m/%Y'),  # Use local time
         'invoice_no': transaction.id,
         'client_name': transaction.client.person_name,
         'items': items,
@@ -248,19 +287,3 @@ def generate_bill(request, transaction_id):
     # Render the bill template
     return render(request, 'bill.html', context)
 
-
-# def generate_bill(request, transaction_id):
-#     # Fetch the transaction by ID
-#     transaction = get_object_or_404(Transaction, id=transaction_id)
-#
-#     # Example: Return a JSON response (you can render a PDF or HTML page as needed)
-#     response_data = {
-#         'client_name': transaction.client.person_name,
-#         'blind_name': transaction.blind_name,
-#         'width': transaction.width,
-#         'length': transaction.length,
-#         'square_foot': transaction.square_foot,
-#         'blind_price': transaction.blind_price,
-#         'total_amount': transaction.total_amount,
-#     }
-#     return JsonResponse(response_data)

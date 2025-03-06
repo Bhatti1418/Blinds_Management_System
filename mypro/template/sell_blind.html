@@ -16,6 +16,11 @@
 
 <body class="bg-black bg-opacity-50 flex items-center justify-center h-screen relative">
 
+    <!-- Message Container -->
+    <div id="message" class="hidden fixed top-4 left-1/2 transform -translate-x-1/2 bg-red-500 text-white px-6 py-3 rounded-md shadow-lg">
+        <span id="messageText"></span>
+    </div>
+
     <!-- Form Container -->
     <div
         class="bg-white bg-opacity-40 shadow-lg shadow-black/50 backdrop-blur-sm p-8 rounded-lg max-w-lg w-full mx-4 md:mx-0">
@@ -132,25 +137,45 @@
                 return;
             }
 
-            blinds.push({ clientName, blindName, length, width });
+            // Fetch the available quantity for the selected blind
+            fetch(`/get-blind-quantity/?blind_name=${encodeURIComponent(blindName)}`)
+                .then(response => response.json())
+                .then(data => {
+                    const availableQuantity = data.remaining_quantity;
+                    const requiredQuantity = length * width;
 
-            if (blinds.length === 1) {
-                document.getElementById('blindList').classList.remove('hidden');
-            }
+                    if (requiredQuantity > availableQuantity) {
+                        // Show the message at the top of the page
+                        document.getElementById('messageText').textContent = "Not enough quantity available.";
+                        document.getElementById('message').classList.remove('hidden');
+                        setTimeout(() => {
+                            document.getElementById('message').classList.add('hidden');
+                        }, 3000); // Hide the message after 3 seconds
+                        return;
+                    }
 
-            let row = document.createElement('tr');
-            row.innerHTML = `
-                <td>${clientName}</td>
-                <td>${blindName}</td>
-                <td>${length}</td>
-                <td>${width}</td>
-            `;
-            document.getElementById('blindItems').appendChild(row);
+                    // If enough quantity is available, proceed to add the blind
+                    blinds.push({ clientName, blindName, length, width });
 
-            // Clear input fields after adding the row
-            document.getElementById('blindname').value = "";
-            document.getElementById('length').value = "";
-            document.getElementById('width').value = "";
+                    if (blinds.length === 1) {
+                        document.getElementById('blindList').classList.remove('hidden');
+                    }
+
+                    let row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${clientName}</td>
+                        <td>${blindName}</td>
+                        <td>${length}</td>
+                        <td>${width}</td>
+                    `;
+                    document.getElementById('blindItems').appendChild(row);
+
+                    // Clear input fields after adding the row
+                    document.getElementById('blindname').value = "";
+                    document.getElementById('length').value = "";
+                    document.getElementById('width').value = "";
+                })
+                .catch(error => console.error("Error fetching blind quantity:", error));
         });
 
         document.getElementById('completeTransaction').addEventListener('click', function () {
