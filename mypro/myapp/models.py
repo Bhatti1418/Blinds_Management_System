@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.utils import timezone
 
 class Client(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
@@ -25,11 +26,15 @@ class Blind(models.Model):
 class Transaction(models.Model):
     client = models.ForeignKey(Client, on_delete=models.CASCADE, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
+    date = models.DateField(default=timezone.now)  # Add this line
     payment_status = models.CharField(
         max_length=10,
         choices=[('Pending', 'Payment Pending'), ('Paid', 'Payment Done')],
         default='Pending'
     )
+    total_balance = models.FloatField(default=0)
+    receiving_balance = models.FloatField(default=0)
+    remaining_balance = models.FloatField(default=0)
 
     def __str__(self):
         return f"Transaction {self.id} - {self.client.person_name if self.client else 'Unknown'}"

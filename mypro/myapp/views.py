@@ -169,7 +169,7 @@ def sellblind(request):
             return JsonResponse({'invalid_blinds': invalid_items, 'out_of_stock': out_of_stock}, status=400)
 
         # Create transaction & transaction items
-        transaction = Transaction.objects.create(client=client)
+        transaction = Transaction.objects.create(client=client)  # The date field is automatically set
         for item in blinds_to_buy:
             item.transaction = transaction
         TransactionItem.objects.bulk_create(blinds_to_buy)
@@ -177,7 +177,6 @@ def sellblind(request):
 
     except json.JSONDecodeError:
         return JsonResponse({'error': "Invalid JSON data"}, status=400)
-
 
 def get_blind_quantity(request):
     blind_name = request.GET.get('blind_name')
@@ -187,6 +186,90 @@ def get_blind_quantity(request):
     else:
         return JsonResponse({'error': 'Blind not found'}, status=404)
 
+
+def balance_view(request):
+    transactions = []
+    total_balance = 0
+    receiving_balance = 0
+    remaining_balance = 0
+    message = None
+
+    if request.method == 'POST':
+        client_name = request.POST.get("clientname", "").strip()
+        receiving_amount_str = request.POST.get("receivingamount", "").strip()
+
+        # Handle empty receiving amount
+        receiving_amount = float(receiving_amount_str) if receiving_amount_str else 0
+
+        if client_name:
+            # Store the client name in the session
+            request.session['client_name'] = client_name
+            request.session.modified = True
+
+            # Fetch transactions for the client
+            transactions_qs = Transaction.objects.filter(Q(client__person_name__icontains=client_name))
+            print(f"Transactions found: {transactions_qs}")  # Debug print
+
+            if transactions_qs.exists():
+                # Convert QuerySet to a list of dictionaries
+                transactions = []
+                for transaction in transactions_qs:
+                    # Calculate total_balance dynamically from TransactionItems
+                    total_balance = sum(item.total_price for item in transaction.transactionitem_set.all())
+                    transactions.append({
+                        'date': timezone.localtime(transaction.created_at).date(),  # Use local time
+                        'total_balance': total_balance,  # Include total_balance
+                        'credit': 0,  # Default credit for existing transactions
+                        'balance': total_balance  # Default balance for existing transactions
+                    })
+
+                # Calculate the overall total balance
+                total_balance = sum(transaction['total_balance'] for transaction in transactions)
+                print(f"Total balance: {total_balance}")  # Debug print
+
+                # Initialize session data for the client if it doesn't exist
+                if 'receiving_amounts' not in request.session:
+                    request.session['receiving_amounts'] = {}
+
+                # Add the new receiving amount to the session (only if > 0)
+                if receiving_amount > 0:
+                    if client_name not in request.session['receiving_amounts']:
+                        request.session['receiving_amounts'][client_name] = []
+
+                    request.session['receiving_amounts'][client_name].append(receiving_amount)
+                    request.session.modified = True  # Mark the session as modified
+
+                # Calculate the total receiving balance
+                receiving_balance = sum(request.session['receiving_amounts'].get(client_name, []))
+                remaining_balance = total_balance - receiving_balance
+
+                # Add the receiving transactions to the list (always show previous receiving amounts)
+                if client_name in request.session['receiving_amounts']:
+                    for amount in request.session['receiving_amounts'][client_name]:
+                        transactions.append({
+                            'date': timezone.localtime(timezone.now()).date(),  # Use local time for the receiving transaction
+                            'total_balance': total_balance,  # Include total_balance
+                            'credit': amount,  # Show the receiving amount
+                            'balance': remaining_balance  # Update the remaining balance
+                        })
+            else:
+                message = "No transactions found for this client."
+                print(f"Message: {message}")  # Debug print
+        else:
+            message = "Please enter a client name to search."
+            print(f"Message: {message}")  # Debug print
+
+    # Pre-fill the client name from the session
+    client_name = request.session.get('client_name', '')
+
+    return render(request, 'balance.html', {
+        'transactions': transactions,
+        'total_balance': total_balance,
+        'receiving_balance': receiving_balance,
+        'remaining_balance': remaining_balance,
+        'message': message,
+        'client_name': client_name  # Pass the client name to the template
+    })
 
 # Search blinds by name
 def searchblind(request):

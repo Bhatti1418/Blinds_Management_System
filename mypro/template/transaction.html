@@ -23,6 +23,20 @@
         tbody tr:hover {
             background-color: #edf2f7; /* Slightly darker gray */
         }
+
+        /* Dark red text box for Pending Payment */
+        .pending-select {
+            background-color: #dc2626; /* Dark red background */
+            border-color: #dc2626; /* Dark red border */
+            color: #ffffff; /* White text */
+        }
+
+        /* Default text box for Paid Payment */
+        .paid-select {
+            background-color: #ffffff; /* White background */
+            border-color: #d1d5db; /* Gray border */
+            color: #000000; /* Black text */
+        }
     </style>
 </head>
 <body class="min-h-screen flex flex-col items-center py-10 text-black">
@@ -74,7 +88,7 @@
                                         <td class="text-center align-middle py-3 px-4" rowspan="{{ transaction.transactionitem_set.all|length }}">
                                             <form action="{% url 'myapp:update_payment_status' transaction.id %}" method="POST" class="inline-form">
                                                 {% csrf_token %}
-                                                <select name="payment_status" class="border border-gray-300 rounded px-2 py-1"
+                                                <select name="payment_status" class="border border-gray-300 rounded px-2 py-1 {% if transaction.payment_status == 'Pending' %}pending-select{% else %}paid-select{% endif %}"
                                                         {% if transaction.payment_status == "Paid" %}disabled{% endif %}>
                                                     <option value="Pending" {% if transaction.payment_status == "Pending" %}selected{% endif %}>
                                                         Pending Payment
@@ -122,7 +136,7 @@
         </a>
     </div>
 
-    <!-- JavaScript to Submit the Form Automatically -->
+    <!-- JavaScript to Submit the Form Automatically and Update Styles -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             // Find all payment status dropdowns
@@ -130,7 +144,23 @@
 
             // Add an event listener to each dropdown
             paymentStatusDropdowns.forEach(dropdown => {
+                // Update styles based on the selected value
+                function updateStyles() {
+                    if (dropdown.value === "Pending") {
+                        dropdown.classList.add("pending-select");
+                        dropdown.classList.remove("paid-select");
+                    } else {
+                        dropdown.classList.add("paid-select");
+                        dropdown.classList.remove("pending-select");
+                    }
+                }
+
+                // Initial style update
+                updateStyles();
+
+                // Update styles on change
                 dropdown.addEventListener('change', function() {
+                    updateStyles();
                     // Submit the form when the dropdown value changes
                     this.closest('form').submit();
                 });

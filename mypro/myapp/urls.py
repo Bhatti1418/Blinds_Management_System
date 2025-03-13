@@ -17,5 +17,6 @@ urlpatterns = [
     path('generate-bill/<int:transaction_id>/', views.generate_bill, name='generate_bill'),
     path('search-transaction/', views.searchtransaction, name='search_transaction'),
     path('get-blind-quantity/', views.get_blind_quantity, name='get_blind_quantity'),
+    path('balance/', views.balance_view, name='balance'),
     # path('update-transaction/<int:transaction_id>/', views.update_transaction, name='update_transaction'),
 ]
