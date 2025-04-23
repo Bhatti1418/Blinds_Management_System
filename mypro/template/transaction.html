@@ -100,13 +100,20 @@
                                                 <button type="submit" class="hidden">Update</button>
                                             </form>
                                         </td>
-                                        <td class="text-center align-middle py-3 px-4" rowspan="{{ transaction.transactionitem_set.all|length }}">
-                                            <a href="{% url 'myapp:generate_bill' transaction.id %}">
-                                                <button class="py-2 px-4 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition duration-200">
-                                                    Generate Bill
-                                                </button>
-                                            </a>
-                                        </td>
+                                    <td class="text-center align-middle py-3 px-4 w-40" rowspan="{{ transaction.transactionitem_set.all|length }}">
+                                    <div class="flex flex-col items-center space-y-2">
+                                        <a href="{% url 'myapp:generate_bill' transaction.id %}" class="w-full">
+                                            <button class="w-full py-2 px-4 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition duration-200">
+                                                Generate Bill
+                                            </button>
+                                        </a>
+                                        <a href="{% url 'myapp:update_transaction_item' transaction.id %}" class="w-full">
+                                            <button class="w-full py-2 px-4 bg-amber-500 text-white rounded-md hover:bg-amber-600 transition duration-200">
+                                                Update
+                                            </button>
+                                        </a>
+                                    </div>
+                                </td>
                                     {% endif %}
                                 </tr>
                             {% endfor %}

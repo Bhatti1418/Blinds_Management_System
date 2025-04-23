@@ -21,6 +21,7 @@ from django.shortcuts import render
 from django.db.models import Sum
 from .models import Blind, TransactionItem, Transaction
 
+
 def homepage(request):
     blinds = Blind.objects.all()
     # Sum of total_price for all pending transactions
@@ -105,6 +106,43 @@ def update_item(request, pk):
     return render(request, 'updating_form.html', {'obj': blind})
 
 
+def update_transaction_item(request, pk):
+    transaction = get_object_or_404(Transaction, pk=pk)
+    items = TransactionItem.objects.filter(transaction=transaction)
+
+    if request.method == 'POST':
+        for item in items:
+            # Update individual fields from form data
+            item.length = float(request.POST.get(f'length_{item.id}', item.length))
+            item.width = float(request.POST.get(f'width_{item.id}', item.width))
+            item.price = float(request.POST.get(f'price_{item.id}', item.price))
+            item.square_foot = item.length * item.width
+            item.total_price = item.square_foot * item.price
+            item.save()
+
+        # Now update Blind and Transaction objects
+        blinds = set(item.blind for item in items)
+
+        for blind in blinds:
+            related_items = TransactionItem.objects.filter(blind=blind)
+            blind.total_square_foot = sum(item.square_foot for item in related_items)
+            blind.total_amount = sum(item.total_price for item in related_items)
+            blind.remaining_quantity = blind.blind_quantity - blind.total_square_foot
+            blind.save()
+
+        # Update transaction totals
+        all_items_in_transaction = TransactionItem.objects.filter(transaction=transaction)
+        transaction.total_balance = sum(item.total_price for item in all_items_in_transaction)
+        transaction.remaining_balance = transaction.total_balance - transaction.receiving_balance
+        transaction.save()
+
+        return redirect('myapp:transactions')
+
+    return render(request, 'updating_transaction.html', {'transaction': transaction, 'items': items})
+
+
+
+
 def get_sales_data(request):
     return JsonResponse({
         'clients': list(Client.objects.values_list('person_name', flat=True)),
@@ -132,7 +170,7 @@ def sellblind(request):
         print(f"All blinds: {data.get('blinds')}")
 
         for blind_data in data.get('blinds', []):
-            b_name, length, width = blind_data.get('blindName', '').strip(), float(blind_data.get('length', 0)), float(blind_data.get('width', 0))
+            b_name, width,length  = blind_data.get('blindName', '').strip(), float(blind_data.get('length', 0)), float(blind_data.get('width', 0))
             sq_ft = length * width
 
             blind_obj = Blind.objects.filter(blind_name__iexact=b_name).first()
