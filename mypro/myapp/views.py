@@ -22,6 +22,7 @@ from django.db.models import Sum
 from .models import Blind, TransactionItem, Transaction
 
 
+
 def homepage(request):
     blinds = Blind.objects.all()
     # Sum of total_price for all pending transactions
@@ -171,7 +172,7 @@ def sellblind(request):
 
         for blind_data in data.get('blinds', []):
             b_name, width,length  = blind_data.get('blindName', '').strip(), float(blind_data.get('length', 0)), float(blind_data.get('width', 0))
-            sq_ft = length * width
+            sq_ft = (length/12) * (width/12)
 
             blind_obj = Blind.objects.filter(blind_name__iexact=b_name).first()
             if not blind_obj:
