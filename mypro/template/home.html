@@ -148,7 +148,7 @@
           </div>
           <div class="p-4 text-right">
             <p class="block antialiased font-sans text-sm leading-normal font-bold text-blue-gray-600">TOTAL AMT</p>
-            <h4 class="block antialiased tracking-normal font-sans text-2xl font-semibold leading-snug text-blue-gray-900">{{ sold_blinds }} Rs</h4>
+            <h4 class="block antialiased tracking-normal font-sans text-2xl font-semibold leading-snug text-blue-gray-900">{{ sold_blinds|floatformat:0 }} Rs</h4>
           </div>
 
         </div>
@@ -160,7 +160,7 @@
           </div>
          <div class="p-4 text-right">
             <p class="block antialiased font-sans text-sm leading-normal font-bold text-blue-gray-600">RECEIVED AMT</p>
-            <h4 class="block antialiased tracking-normal font-sans text-2xl font-semibold leading-snug text-blue-gray-900">{{ pending_orders }} Rs</h4>
+            <h4 class="block antialiased tracking-normal font-sans text-2xl font-semibold leading-snug text-blue-gray-900">{{ pending_orders|floatformat:0 }} Rs</h4>
         </div>
 
         </div>
@@ -172,7 +172,7 @@
           </div>
          <div class="p-4 text-right">
           <p class="block antialiased font-sans text-sm leading-normal font-bold text-blue-gray-600">PENDING AMT</p>
-          <h4 class="block antialiased tracking-normal font-sans text-2xl font-semibold leading-snug text-blue-gray-900">{{ total_blinds }} Rs</h4>
+          <h4 class="block antialiased tracking-normal font-sans text-2xl font-semibold leading-snug text-blue-gray-900">{{ total_blinds|floatformat:0 }} Rs</h4>
           </div>
 
         </div>
@@ -233,16 +233,16 @@
                       <p class="block antialiased font-sans text-sm leading-normal text-blue-gray-900 font-medium">{{ b.blind_quantity }}</p>
                     </td>
                     <td class="py-2 px-4 border-b border-blue-gray-50 text-center align-middle">
-                      <p class="block antialiased font-sans text-sm leading-normal text-blue-gray-900 font-medium">{{ b.remaining_quantity }}</p>
+                      <p class="block antialiased font-sans text-sm leading-normal text-blue-gray-900 font-medium">{{ b.remaining_quantity|floatformat:2 }}</p>
                     </td>
                     <td class="py-2 px-4 border-b border-blue-gray-50 text-center align-middle">
-                      <p class="block antialiased font-sans text-sm leading-normal text-blue-gray-900 font-medium">{{ b.total_square_foot }}</p>
+                      <p class="block antialiased font-sans text-sm leading-normal text-blue-gray-900 font-medium">{{ b.total_square_foot|floatformat:2 }}</p>
                     </td>
                     <td class="py-2 px-4 border-b border-blue-gray-50 text-center align-middle">
                       <p class="block antialiased font-sans text-sm leading-normal text-blue-gray-900 font-medium">{{ b.blind_price }}</p>
                     </td>
                     <td class="py-2 px-4 border-b border-blue-gray-50 text-center align-middle">
-                      <p class="block antialiased font-sans text-sm leading-normal text-blue-gray-900 font-medium">{{ b.total_amount }}</p>
+                      <p class="block antialiased font-sans text-sm leading-normal text-blue-gray-900 font-medium">{{ b.total_amount|floatformat:2 }}</p>
                     </td>
                     <td class="py-2 px-4 border-b border-blue-gray-50 text-center align-middle">
                       <div class="flex justify-center">

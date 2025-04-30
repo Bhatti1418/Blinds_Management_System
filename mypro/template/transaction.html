@@ -80,9 +80,9 @@
                                     <td class="text-center py-3 px-4">{{ item.blind.blind_name }}</td>
                                     <td class="text-center py-3 px-4">{{ item.width }}</td>
                                     <td class="text-center py-3 px-4">{{ item.length }}</td>
-                                    <td class="text-center py-3 px-4">{{ item.square_foot }}</td>
+                                    <td class="text-center py-3 px-4">{{ item.square_foot|floatformat:2 }}</td>
                                     <td class="text-center py-3 px-4">{{ item.price }}</td>
-                                    <td class="text-center py-3 px-4">{{ item.total_price }}</td>
+                                    <td class="text-center py-3 px-4">{{ item.total_price|floatformat:2 }}</td>
 
                                     {% if forloop.first %}
                                         <td class="text-center align-middle py-3 px-4" rowspan="{{ transaction.transactionitem_set.all|length }}">

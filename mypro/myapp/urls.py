@@ -19,4 +19,5 @@ urlpatterns = [
     path('get-blind-quantity/', views.get_blind_quantity, name='get_blind_quantity'),
     path('balance/', views.balance_view, name='balance'),
     path('update-item/<int:pk>/', views.update_transaction_item, name='update_transaction_item'),
+
 ]

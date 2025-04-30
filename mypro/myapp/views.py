@@ -21,7 +21,13 @@ from django.shortcuts import render
 from django.db.models import Sum
 from .models import Blind, TransactionItem, Transaction
 
-
+def format_to_million(amount):
+    if amount >= 1_000_000:
+        return f"{amount / 1_000_000:.1f} Million"
+    elif amount >= 1_000:
+        return f"{amount:,}"
+    else:
+        return str(amount)
 
 def homepage(request):
     blinds = Blind.objects.all()
@@ -44,8 +50,14 @@ def homepage(request):
         'blinds': blinds,
         'total_blinds': pending_orders_amount,
         'sold_blinds': total_blinds_amount,
-        'pending_orders': sold_blinds_amount
+        'pending_orders': sold_blinds_amount,
+
+        # Formatted (Western-style) versions
+        'total_blinds_display': format_to_million(pending_orders_amount),
+        'sold_blinds_display': format_to_million(total_blinds_amount),
+        'pending_orders_display': format_to_million(sold_blinds_amount),
     })
+
 
 # Add a new blind
 def addblind(request):
@@ -173,7 +185,7 @@ def sellblind(request):
         for blind_data in data.get('blinds', []):
             b_name, width,length  = blind_data.get('blindName', '').strip(), float(blind_data.get('length', 0)), float(blind_data.get('width', 0))
             sq_ft = (length/12) * (width/12)
-
+            print(sq_ft)
             blind_obj = Blind.objects.filter(blind_name__iexact=b_name).first()
             if not blind_obj:
                 invalid_items.append(blind_data)
@@ -234,7 +246,7 @@ def balance_view(request):
     message = None
 
     if request.method == 'POST':
-        client_name = request.POST.get("clientname", "").strip()
+        client_name = request.POST.get("clientname", "").strip().upper()
         receiving_amount_str = request.POST.get("receivingamount", "").strip()
 
         # Handle empty receiving amount

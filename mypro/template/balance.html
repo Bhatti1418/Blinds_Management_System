@@ -59,15 +59,15 @@
             <div class="grid grid-cols-3 gap-4 mb-6">
                 <div class="bg-indigo-600 text-white rounded-lg p-4">
                     <p class="text-sm">Total Balance</p>
-                    <p id="totalBalance" class="text-2xl font-bold">Rs {{ total_balance|default:0 }}</p>
+                    <p id="totalBalance" class="text-2xl font-bold">Rs {{ total_balance|floatformat:0}}</p>
                 </div>
                 <div class="bg-green-600 text-white rounded-lg p-4">
                     <p class="text-sm">Receiving Balance</p>
-                    <p id="receivingBalanceDisplay" class="text-2xl font-bold">Rs {{ receiving_balance|default:0 }}</p>
+                    <p id="receivingBalanceDisplay" class="text-2xl font-bold">Rs {{ receiving_balance|floatformat:0 }}</p>
                 </div>
                 <div class="bg-red-600 text-white rounded-lg p-4">
                     <p class="text-sm">Remaining Balance</p>
-                    <p id="remainingBalance" class="text-2xl font-bold">Rs {{ remaining_balance|default:0 }}</p>
+                    <p id="remainingBalance" class="text-2xl font-bold">Rs {{ remaining_balance|floatformat:0 }}</p>
                 </div>
             </div>
 
@@ -85,8 +85,8 @@
                         {% for transaction in transactions %}
                             <tr class="hover:bg-gray-700 transition">
                                 <td class="px-6 py-4 text-center">{{ transaction.date|date:"d-m-Y" }}</td>
-                                <td class="px-6 py-4 text-center">{{ transaction.credit|default:0 }}</td>
-                                <td class="px-6 py-4 text-center">{{ transaction.balance|default:transaction.total_balance }}</td>
+                                <td class="px-6 py-4 text-center">{{ transaction.credit|floatformat:0}}</td>
+                                <td class="px-6 py-4 text-center">{{ transaction.balance|default:transaction.total_balance|floatformat:0 }}</td>
                             </tr>
                         {% endfor %}
                     </tbody>
