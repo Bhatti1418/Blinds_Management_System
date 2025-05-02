@@ -142,7 +142,7 @@
                 .then(response => response.json())
                 .then(data => {
                     const availableQuantity = data.remaining_quantity;
-                    const requiredQuantity = length * width;
+                    const requiredQuantity = (length / 12) * (width / 12);
 
                     if (requiredQuantity > availableQuantity) {
                         // Show the message at the top of the page

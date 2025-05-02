@@ -72,10 +72,10 @@
                                     <td class="px-6 py-4 text-center">{{ b.blind_name }}</td>
                                     <td class="px-6 py-4 text-center">{{ b.purchased_count }}</td>
                                     <td class="px-6 py-4 text-center">{{ b.blind_quantity }}</td>
-                                    <td class="px-6 py-4 text-center">{{ b.remaining_quantity }}</td>
-                                    <td class="px-6 py-4 text-center">{{ b.total_square_foot }}</td>
+                                    <td class="px-6 py-4 text-center">{{ b.remaining_quantity|floatformat:2 }}</td>
+                                    <td class="px-6 py-4 text-center">{{ b.total_square_foot|floatformat:2 }}</td>
                                     <td class="px-6 py-4 text-center">{{ b.blind_price }}</td>
-                                    <td class="px-6 py-4 text-center">{{ b.total_amount }}</td>
+                                    <td class="px-6 py-4 text-center">{{ b.total_amount|floatformat:2 }}</td>
                                 </tr>
                             {% endfor %}
                         </tbody>

@@ -41,16 +41,16 @@
                     <td class="border border-gray-300 p-3 text-center">{{ item.blind.blind_name }}</td>
                     <td class="border border-gray-300 p-3 text-center">{{ item.width }}</td>
                     <td class="border border-gray-300 p-3 text-center">{{ item.length }}</td>
-                    <td class="border border-gray-300 p-3 text-center">{{ item.square_foot }}</td>
+                    <td class="border border-gray-300 p-3 text-center">{{ item.square_foot|floatformat:2 }}</td>
                     <td class="border border-gray-300 p-3 text-center">{{ item.price }}</td>
-                    <td class="border border-gray-300 p-3 text-center font-bold">{{ item.total_price }}</td>
+                    <td class="border border-gray-300 p-3 text-center font-bold">{{ item.total_price|floatformat:2 }}</td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
 
         <div class="mt-6 text-right text-lg font-semibold">
-            <p><strong>Total:</strong> <span class="text-orange-600">{{ total }}</span></p>
+            <p><strong>Total:</strong> <span class="text-orange-600">{{ total|floatformat:0 }}</span></p>
             <p><strong>Advance:</strong> ______</p>
             <p><strong>Balance:</strong> ______</p>
         </div>
