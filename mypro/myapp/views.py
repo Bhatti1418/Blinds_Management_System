@@ -21,13 +21,18 @@ from django.shortcuts import render
 from django.db.models import Sum
 from .models import Blind, TransactionItem, Transaction
 
-def format_to_million(amount):
-    if amount >= 1_000_000:
-        return f"{amount / 1_000_000:.1f} Million"
-    elif amount >= 1_000:
-        return f"{amount:,}"
+def format_large_numbers(value):
+    """Format large values into human-readable format with M (Million), B (Billion), or standard numbers."""
+    if value >= 1_000_000_000:  # For Billions
+        return f"{value / 1_000_000_000:.1f}B"
+    elif value >= 1_000_000:  # For Millions
+        return f"{value / 1_000_000:.1f}M"
+    # elif value >= 1_000:  # For Thousands
+    #     return f"{value / 1_000:.1f}K"
     else:
-        return str(amount)
+        return f"{value:,.2f}"  # For smaller values, show with commas and 2 decimal places
+
+
 
 def homepage(request):
     blinds = Blind.objects.all()
@@ -53,9 +58,9 @@ def homepage(request):
         'pending_orders': sold_blinds_amount,
 
         # Formatted (Western-style) versions
-        'total_blinds_display': format_to_million(pending_orders_amount),
-        'sold_blinds_display': format_to_million(total_blinds_amount),
-        'pending_orders_display': format_to_million(sold_blinds_amount),
+        'total_blinds_display': format_large_numbers(pending_orders_amount),
+        'sold_blinds_display': format_large_numbers(total_blinds_amount),
+        'pending_orders_display': format_large_numbers(sold_blinds_amount),
     })
 
 
@@ -238,6 +243,19 @@ def get_blind_quantity(request):
         return JsonResponse({'error': 'Blind not found'}, status=404)
 
 
+def format_large_numbers(value):
+    """Format large values into human-readable format with M (Million), B (Billion), or standard numbers."""
+    if value >= 1_000_000_000:  # For Billions
+        return f"{value / 1_000_000_000:.1f}B"
+    elif value >= 1_000_000:  # For Millions
+        return f"{value / 1_000_000:.1f}M"
+    elif value >= 1_000:  # For Thousands
+        return f"{value / 1_000:.1f}K"
+    else:
+        return f"{value:,.2f}"  # For smaller values, show with commas and 2 decimal places
+
+
+
 def balance_view(request):
     transactions = []
     total_balance = 0
@@ -248,79 +266,96 @@ def balance_view(request):
     if request.method == 'POST':
         client_name = request.POST.get("clientname", "").strip().upper()
         receiving_amount_str = request.POST.get("receivingamount", "").strip()
-
-        # Handle empty receiving amount
-        receiving_amount = float(receiving_amount_str) if receiving_amount_str else 0
+        receiving_amount = 0
+        if receiving_amount_str:
+            try:
+                receiving_amount = float(receiving_amount_str.replace(',', ''))
+            except ValueError:
+                message = "Invalid receiving amount format."
 
         if client_name:
-            # Store the client name in the session
             request.session['client_name'] = client_name
             request.session.modified = True
 
-            # Fetch transactions for the client
             transactions_qs = Transaction.objects.filter(Q(client__person_name__icontains=client_name))
-            print(f"Transactions found: {transactions_qs}")  # Debug print
 
             if transactions_qs.exists():
-                # Convert QuerySet to a list of dictionaries
                 transactions = []
                 for transaction in transactions_qs:
-                    # Calculate total_balance dynamically from TransactionItems
                     total_balance = sum(item.total_price for item in transaction.transactionitem_set.all())
                     transactions.append({
-                        'date': timezone.localtime(transaction.created_at).date(),  # Use local time
-                        'total_balance': total_balance,  # Include total_balance
-                        'credit': 0,  # Default credit for existing transactions
-                        'balance': total_balance  # Default balance for existing transactions
+                        'date': timezone.localtime(transaction.created_at).date(),
+                        'total_balance': total_balance,
+                        'credit': 0,
+                        'balance': total_balance
                     })
 
-                # Calculate the overall total balance
-                total_balance = sum(transaction['total_balance'] for transaction in transactions)
-                print(f"Total balance: {total_balance}")  # Debug print
+                total_balance = sum(t['total_balance'] for t in transactions)
 
-                # Initialize session data for the client if it doesn't exist
                 if 'receiving_amounts' not in request.session:
                     request.session['receiving_amounts'] = {}
 
-                # Add the new receiving amount to the session (only if > 0)
+                if client_name not in request.session['receiving_amounts']:
+                    request.session['receiving_amounts'][client_name] = []
+
+                # Add new receiving only if amount > 0
                 if receiving_amount > 0:
-                    if client_name not in request.session['receiving_amounts']:
-                        request.session['receiving_amounts'][client_name] = []
+                    request.session['receiving_amounts'][client_name].append({
+                        'amount': receiving_amount,
+                        'date': str(timezone.localtime(timezone.now()).date())
+                    })
+                    request.session.modified = True
 
-                    request.session['receiving_amounts'][client_name].append(receiving_amount)
-                    request.session.modified = True  # Mark the session as modified
+                # Load all receiving entries (past + new)
+                receiving_entries = request.session['receiving_amounts'].get(client_name, [])
 
-                # Calculate the total receiving balance
-                receiving_balance = sum(request.session['receiving_amounts'].get(client_name, []))
+                # Make sure all entries are dictionaries
+                normalized_entries = []
+                for entry in receiving_entries:
+                    if isinstance(entry, dict):
+                        normalized_entries.append(entry)
+                    else:
+                        # In case of legacy float entry
+                        normalized_entries.append({
+                            'amount': entry,
+                            'date': str(timezone.localtime(timezone.now()).date())
+                        })
+
+                receiving_balance = sum(e['amount'] for e in normalized_entries)
                 remaining_balance = total_balance - receiving_balance
 
-                # Add the receiving transactions to the list (always show previous receiving amounts)
-                if client_name in request.session['receiving_amounts']:
-                    for amount in request.session['receiving_amounts'][client_name]:
-                        transactions.append({
-                            'date': timezone.localtime(timezone.now()).date(),  # Use local time for the receiving transaction
-                            'total_balance': total_balance,  # Include total_balance
-                            'credit': amount,  # Show the receiving amount
-                            'balance': remaining_balance  # Update the remaining balance
-                        })
+                for entry in normalized_entries:
+                    date_obj = entry['date']
+                    if isinstance(date_obj, str):
+                        date_obj = datetime.strptime(date_obj, "%Y-%m-%d").date()
+                    transactions.append({
+                        'date': date_obj,
+                        'total_balance': total_balance,
+                        'credit': entry['amount'],
+                        'balance': remaining_balance
+                    })
             else:
                 message = "No transactions found for this client."
-                print(f"Message: {message}")  # Debug print
         else:
             message = "Please enter a client name to search."
-            print(f"Message: {message}")  # Debug print
 
-    # Pre-fill the client name from the session
     client_name = request.session.get('client_name', '')
+
+    # Format the balances using the new format_million function
+    formatted_total_balance = format_large_numbers(total_balance)
+    formatted_receiving_balance = format_large_numbers(receiving_balance)
+    formatted_remaining_balance = format_large_numbers(remaining_balance)
 
     return render(request, 'balance.html', {
         'transactions': transactions,
-        'total_balance': total_balance,
-        'receiving_balance': receiving_balance,
-        'remaining_balance': remaining_balance,
+        'total_balance': formatted_total_balance,
+        'receiving_balance': formatted_receiving_balance,
+        'remaining_balance': formatted_remaining_balance,
         'message': message,
-        'client_name': client_name  # Pass the client name to the template
+        'client_name': client_name
     })
+
+
 
 # Search blinds by name
 def searchblind(request):

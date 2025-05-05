@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -42,8 +43,10 @@
                 </div>
                 <div>
                     <label for="receivingamount" class="block text-sm font-medium text-gray-300">Receiving Amount</label>
-                    <input type="number" id="receivingamount" name="receivingamount" placeholder="Enter receiving amount"
-                           class="mt-1 block w-full px-3 py-2 border border-gray-600 rounded-md shadow-sm bg-gray-700 text-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    <input type="text" id="receivingamount" name="receivingamount" placeholder="Enter receiving amount"
+                       inputmode="decimal" pattern="^\d+(\.\d{1,2})?$"
+                       class="mt-1 block w-full px-3 py-2 border border-gray-600 rounded-md shadow-sm bg-gray-700 text-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+
                 </div>
                 <div>
                     <button type="submit"
@@ -55,21 +58,23 @@
         </div>
 
         <!-- Balances -->
-        <div class="mt-8">
-            <div class="grid grid-cols-3 gap-4 mb-6">
-                <div class="bg-indigo-600 text-white rounded-lg p-4">
-                    <p class="text-sm">Total Balance</p>
-                    <p id="totalBalance" class="text-2xl font-bold">Rs {{ total_balance|floatformat:0}}</p>
-                </div>
-                <div class="bg-green-600 text-white rounded-lg p-4">
-                    <p class="text-sm">Receiving Balance</p>
-                    <p id="receivingBalanceDisplay" class="text-2xl font-bold">Rs {{ receiving_balance|floatformat:0 }}</p>
-                </div>
-                <div class="bg-red-600 text-white rounded-lg p-4">
-                    <p class="text-sm">Remaining Balance</p>
-                    <p id="remainingBalance" class="text-2xl font-bold">Rs {{ remaining_balance|floatformat:0 }}</p>
-                </div>
-            </div>
+      <div class="mt-8">
+    <div class="grid grid-cols-3 gap-4 mb-6">
+        <div class="bg-indigo-600 text-white rounded-lg p-4">
+            <p class="text-sm">Total Balance</p>
+            <p id="totalBalance" class="text-2xl font-bold">Rs {{ total_balance }}</p>
+        </div>
+        <div class="bg-green-600 text-white rounded-lg p-4">
+            <p class="text-sm">Receiving Balance</p>
+            <p id="receivingBalanceDisplay" class="text-2xl font-bold">Rs {{ receiving_balance }}</p>
+        </div>
+        <div class="bg-red-600 text-white rounded-lg p-4">
+            <p class="text-sm">Remaining Balance</p>
+            <p id="remainingBalance" class="text-2xl font-bold">Rs {{ remaining_balance }}</p>
+        </div>
+    </div>
+</div>
+
 
             <!-- Transactions Table -->
             <div class="bg-gray-800 rounded-lg shadow-md overflow-hidden">
