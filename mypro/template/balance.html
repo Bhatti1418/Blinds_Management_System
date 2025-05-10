@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -7,118 +6,128 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <title>Balance</title>
     <style>
-        /* Custom styles for alternating row colors */
         tbody tr:nth-child(odd) {
-            background-color: #374151; /* Dark gray */
+            background-color: #374151;
         }
-
         tbody tr:nth-child(even) {
-            background-color: #4b5563; /* Slightly lighter gray */
+            background-color: #4b5563;
         }
-
-        /* Hover effect on rows */
         tbody tr:hover {
-            background-color: #6b7280; /* Lighter gray */
+            background-color: #6b7280;
         }
     </style>
 </head>
 <body class="min-h-screen bg-gray-900 text-gray-200">
-    <!-- Page Header -->
+
+    <!-- Header -->
     <header class="w-full text-center py-8 bg-indigo-600 text-white">
         <h1 class="text-4xl font-bold">Blind Management System</h1>
         <p class="text-lg mt-2">Balance</p>
     </header>
 
-    <!-- Main Content -->
     <div class="container mx-auto p-6">
-        <!-- Search Form -->
+
+        <!-- Form -->
         <div class="max-w-md mx-auto bg-gray-800 p-6 rounded-lg shadow-md">
             <form method="POST" action="{% url 'myapp:balance' %}" class="space-y-4">
                 {% csrf_token %}
                 <div>
                     <label for="clientname" class="block text-sm font-medium text-gray-300">Client Name</label>
                     <input type="text" id="clientname" name="clientname" placeholder="Enter client name"
-                           class="mt-1 block w-full px-3 py-2 border border-gray-600 rounded-md shadow-sm bg-gray-700 text-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                           value="{{ client_name }}">
+                        class="mt-1 block w-full px-3 py-2 border border-gray-600 rounded-md shadow-sm bg-gray-700 text-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        value="{{ client_name }}">
                 </div>
                 <div>
                     <label for="receivingamount" class="block text-sm font-medium text-gray-300">Receiving Amount</label>
                     <input type="text" id="receivingamount" name="receivingamount" placeholder="Enter receiving amount"
-                       inputmode="decimal" pattern="^\d+(\.\d{1,2})?$"
-                       class="mt-1 block w-full px-3 py-2 border border-gray-600 rounded-md shadow-sm bg-gray-700 text-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
-
+                        inputmode="decimal" pattern="^\d+(\.\d{1,2})?$"
+                        class="mt-1 block w-full px-3 py-2 border border-gray-600 rounded-md shadow-sm bg-gray-700 text-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
                 </div>
                 <div>
                     <button type="submit"
-                            class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
                         Submit
                     </button>
                 </div>
             </form>
         </div>
 
-        <!-- Balances -->
-      <div class="mt-8">
-    <div class="grid grid-cols-3 gap-4 mb-6">
-        <div class="bg-indigo-600 text-white rounded-lg p-4">
-            <p class="text-sm">Total Balance</p>
-            <p id="totalBalance" class="text-2xl font-bold">Rs {{ total_balance }}</p>
-        </div>
-        <div class="bg-green-600 text-white rounded-lg p-4">
-            <p class="text-sm">Receiving Balance</p>
-            <p id="receivingBalanceDisplay" class="text-2xl font-bold">Rs {{ receiving_balance }}</p>
-        </div>
-        <div class="bg-red-600 text-white rounded-lg p-4">
-            <p class="text-sm">Remaining Balance</p>
-            <p id="remainingBalance" class="text-2xl font-bold">Rs {{ remaining_balance }}</p>
-        </div>
-    </div>
-</div>
-
-
-            <!-- Transactions Table -->
-            <div class="bg-gray-800 rounded-lg shadow-md overflow-hidden">
-                <table class="min-w-full">
-                    <thead class="bg-indigo-600 text-white">
-                        <tr>
-                            <th class="px-6 py-3 text-center text-sm font-medium uppercase">Date</th>
-                            <th class="px-6 py-3 text-center text-sm font-medium uppercase">Credit</th>
-                            <th class="px-6 py-3 text-center text-sm font-medium uppercase">Balance</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-gray-700">
-                        {% for transaction in transactions %}
-                            <tr class="hover:bg-gray-700 transition">
-                                <td class="px-6 py-4 text-center">{{ transaction.date|date:"d-m-Y" }}</td>
-                                <td class="px-6 py-4 text-center">{{ transaction.credit|floatformat:0}}</td>
-                                <td class="px-6 py-4 text-center">{{ transaction.balance|default:transaction.total_balance|floatformat:0 }}</td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+        <!-- Balance Summary -->
+        <div class="mt-8">
+            <div class="grid grid-cols-3 gap-4 mb-6">
+                <div class="bg-indigo-600 text-white rounded-lg p-4">
+                    <p class="text-sm">Total Balance</p>
+                    <p id="totalBalance" class="text-1xl font-bold">Rs {{ total_balance }}</p>
+                </div>
+                <div class="bg-green-600 text-white rounded-lg p-4">
+                    <p class="text-sm">Receiving Balance</p>
+                    <p id="receivingBalanceDisplay" class="text-1xl font-bold">Rs {{ receiving_balance }}</p>
+                </div>
+                <div class="bg-red-600 text-white rounded-lg p-4">
+                    <p class="text-sm">Remaining Balance</p>
+                    <p id="remainingBalance" class="text-1xl font-bold">Rs {{ remaining_balance }}</p>
+                </div>
             </div>
         </div>
 
-        <!-- Display Messages -->
+        <!-- Transactions Table -->
+        <div class="bg-gray-800 rounded-lg shadow-md overflow-hidden">
+            <table class="min-w-full">
+                <thead class="bg-indigo-600 text-white">
+                    <tr>
+                        <th class="px-6 py-3 text-center text-sm font-medium uppercase">Date</th>
+                        <th class="px-6 py-3 text-center text-sm font-medium uppercase">Debit(-)</th>
+                        <th class="px-6 py-3 text-center text-sm font-medium uppercase">Credit(+)</th>
+                        <th class="px-6 py-3 text-center text-sm font-medium uppercase">Balance</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-700">
+                    {% for transaction in transactions %}
+                        <tr class="hover:bg-gray-700 transition">
+                            <td class="px-6 py-4 text-center">{{ transaction.date|date:"d-m-Y" }}</td>
+                            <td class="px-6 py-4 text-center">
+                                {% if transaction.debit > 0 %}
+                                    {{ transaction.debit|floatformat:0 }}
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                            <td class="px-6 py-4 text-center">
+                                {% if transaction.credit > 0 %}
+                                    {{ transaction.credit|floatformat:0 }}
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                            <td class="px-6 py-4 text-center">
+                                {{ transaction.balance|floatformat:0 }}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Message -->
         {% if message %}
             <div class="mt-6 text-center text-red-400 font-semibold">
                 {{ message }}
             </div>
         {% endif %}
+
+        <!-- Go to Homepage -->
+        <div class="mt-8 text-center">
+            <a href="http://127.0.0.1:8000/homepage/">
+                <button class="py-2 px-4 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition duration-200">
+                    Go to Homepage
+                </button>
+            </a>
+        </div>
     </div>
 
     <!-- Footer -->
     <footer class="mt-8 bg-indigo-600 text-white py-4 text-center">
         <p>&copy; 2023 Blind Management System. All rights reserved.</p>
     </footer>
-
-    <!-- Homepage Button -->
-    <div class="mt-8">
-        <a href="http://127.0.0.1:8000/">
-            <button class="py-2 px-4 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition duration-200">
-                Go to Homepage
-            </button>
-        </a>
-    </div>
 </body>
 </html>

@@ -6,7 +6,8 @@ from . import views  # Import all views from the current directory
 app_name = 'myapp'
 
 urlpatterns = [
-    path('', views.homepage, name='homepage'),
+    path('homepage/', views.homepage, name='homepage'),
+    path('', views.mylogin, name='mylogin'),
     path('addblind/', views.addblind, name='addblind'),
     path('sellblind/', views.sellblind, name='sellblind'),
     path('searchblind/', views.searchblind, name='searchblind'),
