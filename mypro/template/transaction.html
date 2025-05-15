@@ -10,43 +10,37 @@
             background-color: #f8f8f8;
         }
 
-        /* Add alternating row colors */
         tbody tr:nth-child(odd) {
-            background-color: #f9fafb; /* Light gray */
+            background-color: #f9fafb;
         }
 
         tbody tr:nth-child(even) {
-            background-color: #ffffff; /* White */
+            background-color: #ffffff;
         }
 
-        /* Hover effect on rows */
         tbody tr:hover {
-            background-color: #edf2f7; /* Slightly darker gray */
+            background-color: #edf2f7;
         }
 
-        /* Dark red text box for Pending Payment */
         .pending-select {
-            background-color: #dc2626; /* Dark red background */
-            border-color: #dc2626; /* Dark red border */
-            color: #ffffff; /* White text */
+            background-color: #dc2626;
+            border-color: #dc2626;
+            color: #ffffff;
         }
 
-        /* Default text box for Paid Payment */
         .paid-select {
-            background-color: #ffffff; /* White background */
-            border-color: #d1d5db; /* Gray border */
-            color: #000000; /* Black text */
+            background-color: #ffffff;
+            border-color: #d1d5db;
+            color: #000000;
         }
     </style>
 </head>
 <body class="min-h-screen flex flex-col items-center py-10 text-black">
-    <!-- Page Header -->
     <header class="w-full text-center mb-10">
         <h1 class="text-4xl font-bold">Blind Management System</h1>
         <p class="text-gray-600 mt-2">Transactions</p>
     </header>
 
-    <!-- Results Table -->
     <div class="mt-12 w-full bg-white rounded-xl shadow-lg overflow-hidden">
         <div class="p-6 px-0 pt-0 pb-2">
             <table class="table-auto w-full border-collapse border border-gray-200">
@@ -65,13 +59,13 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {% if transactions %}
-                        {% for transaction in transactions %}
+                    {% if page_obj %}
+                        {% for transaction in page_obj %}
                             {% for item in transaction.transactionitem_set.all %}
                                 <tr>
                                     {% if forloop.first %}
                                         <td class="text-center font-bold align-middle" rowspan="{{ transaction.transactionitem_set.all|length }}">
-                                            {{ transaction.created_at|date:"d/m/Y" }} <!-- Display transaction date -->
+                                            {{ transaction.created_at|date:"d/m/Y" }}
                                         </td>
                                         <td class="text-center font-bold align-middle" rowspan="{{ transaction.transactionitem_set.all|length }}">
                                             {{ transaction.client.person_name }}
@@ -100,27 +94,24 @@
                                                 <button type="submit" class="hidden">Update</button>
                                             </form>
                                         </td>
-                                    <td class="text-center align-middle py-3 px-4 w-40" rowspan="{{ transaction.transactionitem_set.all|length }}">
-                                    <div class="flex flex-col items-center space-y-2">
-                                        <a href="{% url 'myapp:generate_bill' transaction.id %}" class="w-full">
-                                            <button class="w-full py-2 px-4 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition duration-200">
-                                                Generate Bill
-                                            </button>
-                                        </a>
-                                        <a href="{% url 'myapp:update_transaction_item' transaction.id %}" class="w-full">
-                                            <button class="w-full py-2 px-4 bg-amber-500 text-white rounded-md hover:bg-amber-600 transition duration-200">
-                                                Update
-                                            </button>
-                                        </a>
-                                    </div>
-                                </td>
+                                        <td class="text-center align-middle py-3 px-4 w-40" rowspan="{{ transaction.transactionitem_set.all|length }}">
+                                            <div class="flex flex-col items-center space-y-2">
+                                                <a href="{% url 'myapp:generate_bill' transaction.id %}" class="w-full">
+                                                    <button class="w-full py-2 px-4 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition duration-200">
+                                                        Generate Bill
+                                                    </button>
+                                                </a>
+                                                <a href="{% url 'myapp:update_transaction_item' transaction.id %}" class="w-full">
+                                                    <button class="w-full py-2 px-4 bg-amber-500 text-white rounded-md hover:bg-amber-600 transition duration-200">
+                                                        Update
+                                                    </button>
+                                                </a>
+                                            </div>
+                                        </td>
                                     {% endif %}
                                 </tr>
                             {% endfor %}
-                            <!-- Add a separator after each transaction -->
-                            <tr>
-                                <td colspan="10" class="border-t border-gray-300"></td>
-                            </tr>
+                            <tr><td colspan="10" class="border-t border-gray-300"></td></tr>
                         {% endfor %}
                     {% else %}
                         <tr>
@@ -134,6 +125,23 @@
         </div>
     </div>
 
+    <!-- Pagination Buttons -->
+    <div class="mt-6 flex justify-center space-x-2">
+        {% if page_obj.has_previous %}
+            <a href="?page=1" class="px-3 py-1 bg-gray-200 text-gray-700 rounded hover:bg-gray-300">&laquo; First</a>
+            <a href="?page={{ page_obj.previous_page_number }}" class="px-3 py-1 bg-gray-200 text-gray-700 rounded hover:bg-gray-300">Previous</a>
+        {% endif %}
+
+        <span class="px-3 py-1 bg-blue-500 text-white rounded">
+            Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+        </span>
+
+        {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}" class="px-3 py-1 bg-gray-200 text-gray-700 rounded hover:bg-gray-300">Next</a>
+            <a href="?page={{ page_obj.paginator.num_pages }}" class="px-3 py-1 bg-gray-200 text-gray-700 rounded hover:bg-gray-300">Last &raquo;</a>
+        {% endif %}
+    </div>
+
     <!-- Homepage Button -->
     <div class="mt-8">
         <a href="http://127.0.0.1:8000/homepage/">
@@ -143,15 +151,10 @@
         </a>
     </div>
 
-    <!-- JavaScript to Submit the Form Automatically and Update Styles -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Find all payment status dropdowns
             const paymentStatusDropdowns = document.querySelectorAll('select[name="payment_status"]');
-
-            // Add an event listener to each dropdown
             paymentStatusDropdowns.forEach(dropdown => {
-                // Update styles based on the selected value
                 function updateStyles() {
                     if (dropdown.value === "Pending") {
                         dropdown.classList.add("pending-select");
@@ -161,14 +164,9 @@
                         dropdown.classList.remove("pending-select");
                     }
                 }
-
-                // Initial style update
                 updateStyles();
-
-                // Update styles on change
                 dropdown.addEventListener('change', function() {
                     updateStyles();
-                    // Submit the form when the dropdown value changes
                     this.closest('form').submit();
                 });
             });

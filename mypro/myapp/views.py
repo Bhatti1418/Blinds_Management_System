@@ -15,6 +15,7 @@ from itertools import groupby
 from django.http import JsonResponse
 from django.utils import timezone
 from django.contrib.auth import authenticate, login
+from django.core.paginator import Paginator
 from django.db.models import Sum
 
 # Homepage view
@@ -112,33 +113,44 @@ def addblind(request):
 
 
 # Update blind details
+from datetime import datetime
+from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
+
 def update_item(request, pk):
     blind = get_object_or_404(Blind, pk=pk)
 
     if request.method == 'POST':
         b_name = request.POST.get('blindname')
-        t_qty = float(request.POST.get('totalquantity'))
-        r_qty = float(request.POST.get('remquantity'))
+        new_total_qty = float(request.POST.get('totalquantity'))
+        old_total_qty = blind.blind_quantity  # Save old total
+        r_qty = float(request.POST.get('remquantity'))  # This will be overwritten below
         price = float(request.POST.get('price'))
         purchased_count = float(request.POST.get('purchasedblind'))
-        # Get the entry date as a string
         entry_date_str = request.POST.get('entrydate')
-
-        # Convert the entry date string to a date object
         entry_date = datetime.strptime(entry_date_str, '%Y-%m-%d').date()
+
+        # ✅ Automatically adjust remaining quantity
+        quantity_diff = new_total_qty - old_total_qty
+        new_remaining_qty = blind.remaining_quantity + quantity_diff
+
+        # Prevent negative remaining quantity (just in case)
+        if new_remaining_qty < 0:
+            new_remaining_qty = 0
 
         # Update the blind object
         blind.blind_name = b_name
-        blind.blind_quantity = t_qty
-        blind.remaining_quantity = r_qty
+        blind.blind_quantity = new_total_qty
+        blind.remaining_quantity = new_remaining_qty
         blind.blind_price = price
         blind.purchased_count = purchased_count
-        blind.blind_entry_date = entry_date  # Update the entry date
+        blind.blind_entry_date = entry_date
         blind.save()
 
         return redirect(reverse('myapp:homepage'))
 
     return render(request, 'updating_form.html', {'obj': blind})
+
 
 
 def update_transaction_item(request, pk):
@@ -445,9 +457,11 @@ def update_payment_status(request, id):
 
 
 def transactions_view(request):
-    transactions = Transaction.objects.prefetch_related('transactionitem_set').select_related('client')
-    return render(request, 'transaction.html', {'transactions': transactions})
-
+    all_transactions = Transaction.objects.prefetch_related('transactionitem_set').select_related('client').order_by('-created_at')
+    paginator = Paginator(all_transactions, 30)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    return render(request, 'transaction.html', {'page_obj': page_obj})
 
 def generate_bill(request, transaction_id):
     # Fetch the transaction and related items
