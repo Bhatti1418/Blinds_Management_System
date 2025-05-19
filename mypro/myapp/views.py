@@ -110,13 +110,6 @@ def addblind(request):
     return render(request, 'add_blind.html')
 
 
-
-
-# Update blind details
-from datetime import datetime
-from django.shortcuts import get_object_or_404, redirect, render
-from django.urls import reverse
-
 def update_item(request, pk):
     blind = get_object_or_404(Blind, pk=pk)
 
@@ -163,7 +156,9 @@ def update_transaction_item(request, pk):
             item.length = float(request.POST.get(f'length_{item.id}', item.length))
             item.width = float(request.POST.get(f'width_{item.id}', item.width))
             item.price = float(request.POST.get(f'price_{item.id}', item.price))
-            item.square_foot = item.length * item.width
+            item.square_foot = (item.length / 12) * (item.width / 12)
+            if item.square_foot < 16:
+                item.square_foot = 16
             item.total_price = item.square_foot * item.price
             item.save()
 
@@ -219,7 +214,8 @@ def sellblind(request):
         for blind_data in data.get('blinds', []):
             b_name, width,length  = blind_data.get('blindName', '').strip(), float(blind_data.get('length', 0)), float(blind_data.get('width', 0))
             sq_ft = (length/12) * (width/12)
-            print(sq_ft)
+            if sq_ft < 16:
+                sq_ft = 16
             blind_obj = Blind.objects.filter(blind_name__iexact=b_name).first()
             if not blind_obj:
                 invalid_items.append(blind_data)
@@ -313,15 +309,14 @@ def balance_view(request):
 
                 # --- Get total debits from transaction items ---
                 for transaction in transactions_qs:
-                    for item in transaction.transactionitem_set.all():
-                        item_total = item.total_price
-                        total_balance += item_total
-                        transactions.append({
-                            'date': timezone.localtime(transaction.created_at).date(),
-                            'debit': item_total,
-                            'credit': 0,
-                            'balance': None
-                        })
+                    transaction_total = sum(item.total_price for item in transaction.transactionitem_set.all())
+                    total_balance += transaction_total
+                    transactions.append({
+                        'date': timezone.localtime(transaction.created_at).date(),
+                        'debit': transaction_total,
+                        'credit': 0,
+                        'balance': None
+                    })
 
                 # --- Initialize session receiving amounts if not exist ---
                 if 'receiving_amounts' not in request.session:
@@ -386,9 +381,9 @@ def balance_view(request):
     client_name = request.session.get('client_name', '')
 
     # Format balances for display
-    formatted_total_balance = format_large_numbers(total_balance)
-    formatted_receiving_balance = format_large_numbers(receiving_balance)
-    formatted_remaining_balance = format_large_numbers(remaining_balance)
+    formatted_total_balance = f"{total_balance:,.2f}"
+    formatted_receiving_balance = f"{receiving_balance:,.2f}"
+    formatted_remaining_balance = f"{remaining_balance:,.2f}"
 
     return render(request, 'balance.html', {
         'transactions': transactions,
@@ -450,9 +445,21 @@ def update_payment_status(request, id):
 
         # Update the payment status
         transaction.payment_status = payment_status
+
+        # If paid, set receiving_balance and remaining_balance accordingly
+        if payment_status == 'Paid':
+            transaction.receiving_balance = transaction.total_balance
+            transaction.remaining_balance = 0
+
         transaction.save()
 
-    # Redirect back to the searchtransaction page after updating the status
+        # If paid, redirect to balance view
+        if payment_status == 'Paid':
+            # Pass client name in session for balance view (if needed)
+            request.session['client_name'] = transaction.client.person_name.upper()
+            return redirect(reverse('myapp:balance'))
+
+    # If not paid or other case, redirect to homepage
     return redirect('myapp:homepage')
 
 

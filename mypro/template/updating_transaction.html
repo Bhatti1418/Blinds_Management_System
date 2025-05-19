@@ -9,7 +9,7 @@
             const width = parseFloat(document.getElementById(`width_${id}`).value) || 0;
             const price = parseFloat(document.getElementById(`price_${id}`).value) || 0;
 
-            const sqft = length * width;
+            const sqft = (length / 12) * (width / 12);
             const total = sqft * price;
 
             document.getElementById(`square_foot_${id}`).textContent = sqft.toFixed(2);
