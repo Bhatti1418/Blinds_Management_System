@@ -16,12 +16,8 @@ from django.http import JsonResponse
 from django.utils import timezone
 from django.contrib.auth import authenticate, login
 from django.core.paginator import Paginator
+from django.urls import reverse
 from django.db.models import Sum
-
-# Homepage view
-from django.shortcuts import render
-from django.db.models import Sum
-from .models import Blind, TransactionItem, Transaction
 
 
 def mylogin(request):
@@ -54,32 +50,39 @@ def format_large_numbers(value):
 
 def homepage(request):
     blinds = Blind.objects.all()
-    # Sum of total_price for all pending transactions
+
+    # Totals
     pending_orders_amount = TransactionItem.objects.filter(
         transaction__payment_status="Pending"
     ).aggregate(total=Sum('total_price'))['total'] or 0
 
-    # Sum of total_amount for all blinds
     total_blinds_amount = Blind.objects.aggregate(
         total=Sum('total_amount')
     )['total'] or 0
 
-    # Sum of total_price for all completed (Paid) transactions
     sold_blinds_amount = TransactionItem.objects.filter(
         transaction__payment_status="Paid"
     ).aggregate(total=Sum('total_price'))['total'] or 0
 
     return render(request, 'home.html', {
         'blinds': blinds,
+
+        # Raw totals
         'total_blinds': pending_orders_amount,
         'sold_blinds': total_blinds_amount,
         'pending_orders': sold_blinds_amount,
 
-        # Formatted (Western-style) versions
+        # Short format display (K, M, B)
         'total_blinds_display': format_large_numbers(pending_orders_amount),
         'sold_blinds_display': format_large_numbers(total_blinds_amount),
         'pending_orders_display': format_large_numbers(sold_blinds_amount),
+
+        # Exact format (comma, 2 decimal)
+        'total_blinds_exact': f"{pending_orders_amount:,.2f}",
+        'sold_blinds_exact': f"{total_blinds_amount:,.2f}",
+        'pending_orders_exact': f"{sold_blinds_amount:,.2f}",
     })
+
 
 
 # Add a new blind
@@ -145,14 +148,12 @@ def update_item(request, pk):
     return render(request, 'updating_form.html', {'obj': blind})
 
 
-
 def update_transaction_item(request, pk):
     transaction = get_object_or_404(Transaction, pk=pk)
     items = TransactionItem.objects.filter(transaction=transaction)
 
     if request.method == 'POST':
         for item in items:
-            # Update individual fields from form data
             item.length = float(request.POST.get(f'length_{item.id}', item.length))
             item.width = float(request.POST.get(f'width_{item.id}', item.width))
             item.price = float(request.POST.get(f'price_{item.id}', item.price))
@@ -162,9 +163,8 @@ def update_transaction_item(request, pk):
             item.total_price = item.square_foot * item.price
             item.save()
 
-        # Now update Blind and Transaction objects
+        # Update Blind stats
         blinds = set(item.blind for item in items)
-
         for blind in blinds:
             related_items = TransactionItem.objects.filter(blind=blind)
             blind.total_square_foot = sum(item.square_foot for item in related_items)
@@ -172,13 +172,23 @@ def update_transaction_item(request, pk):
             blind.remaining_quantity = blind.blind_quantity - blind.total_square_foot
             blind.save()
 
-        # Update transaction totals
+        # Update Transaction totals
         all_items_in_transaction = TransactionItem.objects.filter(transaction=transaction)
-        transaction.total_balance = sum(item.total_price for item in all_items_in_transaction)
+        transaction.total_prc = sum(item.total_price for item in all_items_in_transaction)
+        transaction.total_sq_ft = sum(item.square_foot for item in all_items_in_transaction)
+        transaction.total_balance = transaction.total_prc
         transaction.remaining_balance = transaction.total_balance - transaction.receiving_balance
         transaction.save()
 
-        return redirect('myapp:transactions')
+        # ✅ Determine source page from query param
+        source = request.GET.get('source', '')
+
+        if source == 'balance':
+            return redirect(
+                f"{reverse('myapp:balance')}?clientname={transaction.client.person_name}&highlight_id={transaction.id}"
+            )
+        else:
+            return redirect('myapp:transactions')
 
     return render(request, 'updating_transaction.html', {'transaction': transaction, 'items': items})
 
@@ -191,6 +201,7 @@ def get_sales_data(request):
         'blinds': list(Blind.objects.values_list('blind_name', flat=True))
     })
 
+
 def sellblind(request):
     if request.method != 'POST':
         return render(request, 'sell_blind.html')
@@ -202,20 +213,23 @@ def sellblind(request):
         if not c_name:
             return JsonResponse({'error': "Client name is required."}, status=400)
 
-        # Ensure client exists
+        # Get or create client
         client, _ = Client.objects.get_or_create(
             person_name=c_name,
             defaults={'user': User.objects.first()}
         )
 
         blinds_to_buy, invalid_items, out_of_stock = [], [], []
-        print(f"All blinds: {data.get('blinds')}")
 
         for blind_data in data.get('blinds', []):
-            b_name, width,length  = blind_data.get('blindName', '').strip(), float(blind_data.get('length', 0)), float(blind_data.get('width', 0))
-            sq_ft = (length/12) * (width/12)
+            b_name = blind_data.get('blindName', '').strip()
+            width = float(blind_data.get('length', 0))
+            print("width: ",width)
+            length = float(blind_data.get('width', 0))
+            sq_ft = (width / 12) * (length / 12)
             if sq_ft < 16:
                 sq_ft = 16
+
             blind_obj = Blind.objects.filter(blind_name__iexact=b_name).first()
             if not blind_obj:
                 invalid_items.append(blind_data)
@@ -227,17 +241,15 @@ def sellblind(request):
 
             total_price = sq_ft * blind_obj.blind_price
 
-            # Update Blind Inventory
+            # Update blind inventory
             blind_obj.remaining_quantity -= sq_ft
             blind_obj.total_square_foot += sq_ft
             blind_obj.total_amount += total_price
             blind_obj.purchased_count += 1
             blind_obj.save()
 
-            print(blind_data)
-
             blinds_to_buy.append(TransactionItem(
-                transaction=None,  # Set later
+                transaction=None,  # set later
                 blind=blind_obj,
                 length=length,
                 width=width,
@@ -247,17 +259,42 @@ def sellblind(request):
             ))
 
         if not blinds_to_buy:
-            return JsonResponse({'invalid_blinds': invalid_items, 'out_of_stock': out_of_stock}, status=400)
+            return JsonResponse({
+                'invalid_blinds': invalid_items,
+                'out_of_stock': out_of_stock
+            }, status=400)
 
-        # Create transaction & transaction items
-        transaction = Transaction.objects.create(client=client)  # The date field is automatically set
+        # ✅ Calculate totals BEFORE creating transaction
+        total_price = sum(item.total_price for item in blinds_to_buy)
+        total_sq_ft = sum(item.square_foot for item in blinds_to_buy)
+        receiving_balance = 0  # or use your logic if user enters an amount
+
+        # ✅ Create transaction with all required fields
+        transaction = Transaction.objects.create(
+            client=client,
+            total_prc=total_price,
+            total_sq_ft=total_sq_ft,
+            total_balance=total_price,
+            receiving_balance=receiving_balance,
+            remaining_balance=total_price - receiving_balance
+        )
+
+        # ✅ Attach transaction to each item
         for item in blinds_to_buy:
             item.transaction = transaction
         TransactionItem.objects.bulk_create(blinds_to_buy)
-        return JsonResponse({"redirect_url": "/transactions/"})
+
+        return JsonResponse({
+            "redirect_url": f"{reverse('myapp:balance')}?clientname={client.person_name}&highlight_id={transaction.id}"
+        })
+
 
     except json.JSONDecodeError:
         return JsonResponse({'error': "Invalid JSON data"}, status=400)
+
+    except Exception as e:
+        return JsonResponse({'error': f"Unexpected error occurred: {str(e)}"}, status=500)
+
 
 def get_blind_quantity(request):
     blind_name = request.GET.get('blind_name')
@@ -286,113 +323,105 @@ def balance_view(request):
     receiving_balance = 0
     remaining_balance = 0
     message = None
+    just_completed = None
+
+    client_name = request.POST.get("clientname", "").strip().upper() if request.method == 'POST' else request.GET.get("clientname", "").strip().upper()
+    highlight_id = request.GET.get("highlight_id")
+
+    # 🧠 If highlight_id in GET, store in session
+    if highlight_id:
+        request.session['highlight_id'] = highlight_id
+    # 🧠 If not in GET, try to get from session
+    elif not highlight_id and 'highlight_id' in request.session:
+        highlight_id = request.session['highlight_id']
 
     if request.method == 'POST':
-        client_name = request.POST.get("clientname", "").strip().upper()
-        receiving_amount_str = request.POST.get("receivingamount", "").strip()
-        receiving_amount = 0
+        receiving_amount_str = request.POST.get("receivingamount", "").replace(",", "")
+        try:
+            receiving_amount = float(receiving_amount_str)
+        except ValueError:
+            receiving_amount = 0
+        if receiving_amount > 0 and client_name:
+            if 'receiving_amounts' not in request.session:
+                request.session['receiving_amounts'] = {}
+            if client_name not in request.session['receiving_amounts']:
+                request.session['receiving_amounts'][client_name] = []
 
-        if receiving_amount_str:
-            try:
-                receiving_amount = float(receiving_amount_str.replace(',', ''))
-            except ValueError:
-                message = "Invalid receiving amount format."
-
-        if client_name:
-            request.session['client_name'] = client_name
+            request.session['receiving_amounts'][client_name].append({
+                "date": str(datetime.today().date()),
+                "amount": receiving_amount
+            })
             request.session.modified = True
 
-            transactions_qs = Transaction.objects.filter(Q(client__person_name__icontains=client_name))
+    if client_name:
+        request.session['client_name'] = client_name
+        transactions_qs = Transaction.objects.filter(client__person_name__iexact=client_name)
 
-            if transactions_qs.exists():
-                transactions = []
+        if transactions_qs.exists():
+            for transaction in transactions_qs:
+                transaction_total = sum(item.total_price for item in transaction.transactionitem_set.all())
+                total_balance += transaction_total
 
-                # --- Get total debits from transaction items ---
-                for transaction in transactions_qs:
-                    transaction_total = sum(item.total_price for item in transaction.transactionitem_set.all())
-                    total_balance += transaction_total
-                    transactions.append({
-                        'date': timezone.localtime(transaction.created_at).date(),
-                        'debit': transaction_total,
-                        'credit': 0,
-                        'balance': None
-                    })
+                transactions.append({
+                    'id': transaction.id,
+                    'date': transaction.created_at.date(),
+                    'debit': transaction_total,
+                    'credit': 0,
+                    'balance': None,
+                    'highlight': str(transaction.id) == highlight_id
+                })
 
-                # --- Initialize session receiving amounts if not exist ---
-                if 'receiving_amounts' not in request.session:
-                    request.session['receiving_amounts'] = {}
-                if client_name not in request.session['receiving_amounts']:
-                    request.session['receiving_amounts'][client_name] = []
+                # After fetching transactions_qs
+                highlighted_transaction = transactions_qs.filter(id=highlight_id).first()
+                if highlighted_transaction:
+                    just_completed = {
+                        "id": highlighted_transaction.id,
+                        "date": highlighted_transaction.created_at,
+                        "client": highlighted_transaction.client.person_name,
+                        "items": highlighted_transaction.transactionitem_set.all(),
+                        "total_price": highlighted_transaction.total_prc,
+                        "total_sqft": highlighted_transaction.total_sq_ft,
+                        "payment_status": highlighted_transaction.payment_status
+                    }
 
-                # --- Save current receiving amount if > 0 ---
-                if receiving_amount > 0:
-                    request.session['receiving_amounts'][client_name].append({
-                        'amount': receiving_amount,
-                        'date': str(timezone.localtime(timezone.now()).date())
-                    })
-                    request.session.modified = True
+            receiving_entries = request.session.get('receiving_amounts', {}).get(client_name, [])
+            for entry in receiving_entries:
+                date_obj = datetime.strptime(entry['date'], "%Y-%m-%d").date() if isinstance(entry['date'], str) else entry['date']
+                transactions.append({
+                    'id': None,
+                    'date': date_obj,
+                    'debit': 0,
+                    'credit': entry['amount'],
+                    'balance': None,
+                    'highlight': False
+                })
+                receiving_balance += entry['amount']
 
-                # --- Load all receiving entries for this client ---
-                receiving_entries = request.session['receiving_amounts'][client_name]
+            # Sort by date
+            transactions.sort(key=lambda x: x['date'])
 
-                # Normalize all entries
-                normalized_entries = []
-                for entry in receiving_entries:
-                    if isinstance(entry, dict):
-                        normalized_entries.append(entry)
-                    else:
-                        normalized_entries.append({
-                            'amount': entry,
-                            'date': str(timezone.localtime(timezone.now()).date())
-                        })
+            # Calculate running balance
+            running_balance = 0
+            for t in transactions:
+                running_balance += t['debit']
+                running_balance -= t['credit']
+                t['balance'] = running_balance
 
-                # Add receiving entries to transaction list
-                for entry in normalized_entries:
-                    date_obj = entry['date']
-                    if isinstance(date_obj, str):
-                        date_obj = datetime.strptime(date_obj, "%Y-%m-%d").date()
-
-                    transactions.append({
-                        'date': date_obj,
-                        'debit': 0,
-                        'credit': entry['amount'],
-                        'balance': None
-                    })
-                    receiving_balance += entry['amount']
-
-                # --- Sort all transactions by date ---
-                transactions.sort(key=lambda x: x['date'])
-
-                # --- Calculate running balance ---
-                running_balance = 0
-                for t in transactions:
-                    running_balance += t['debit']
-                    running_balance -= t['credit']
-                    t['balance'] = running_balance
-
-                remaining_balance = running_balance
-
-            else:
-                message = "No transactions found for this client."
+            remaining_balance = running_balance
         else:
-            message = "Please enter a client name to search."
-
-    # Get client name again for form pre-fill
-    client_name = request.session.get('client_name', '')
-
-    # Format balances for display
-    formatted_total_balance = f"{total_balance:,.2f}"
-    formatted_receiving_balance = f"{receiving_balance:,.2f}"
-    formatted_remaining_balance = f"{remaining_balance:,.2f}"
+            message = "No transactions found for this client."
 
     return render(request, 'balance.html', {
         'transactions': transactions,
-        'total_balance': formatted_total_balance,
-        'receiving_balance': formatted_receiving_balance,
-        'remaining_balance': formatted_remaining_balance,
-        'message': message,
-        'client_name': client_name
+        'total_balance': f"{total_balance:,.2f}",
+        'receiving_balance': f"{receiving_balance:,.2f}",
+        'remaining_balance': f"{remaining_balance:,.2f}",
+        'client_name': request.session.get('client_name', ''),
+        'just_completed': just_completed,
+        'message': message
     })
+
+
 
 
 # Search blinds by name
@@ -433,62 +462,66 @@ def searchtransaction(request):
 
 def update_payment_status(request, id):
     if request.method == 'POST':
-        # Get the transaction by id
         transaction = get_object_or_404(Transaction, id=id)
-
-        # Get the new payment status from the form
         payment_status = request.POST.get('payment_status')
 
-        # Validate the payment status
         if payment_status not in ['Pending', 'Paid']:
             return HttpResponseBadRequest("Invalid payment status.")
 
-        # Update the payment status
         transaction.payment_status = payment_status
 
-        # If paid, set receiving_balance and remaining_balance accordingly
         if payment_status == 'Paid':
             transaction.receiving_balance = transaction.total_balance
             transaction.remaining_balance = 0
 
         transaction.save()
 
-        # If paid, redirect to balance view
-        if payment_status == 'Paid':
-            # Pass client name in session for balance view (if needed)
-            request.session['client_name'] = transaction.client.person_name.upper()
-            return redirect(reverse('myapp:balance'))
+        # ✅ Smart redirect back to the same page with highlighting
+        next_url = request.GET.get('next') or reverse('myapp:balance')
+        highlight_id = request.GET.get('highlight_id', transaction.id)
+        redirect_url = f"{next_url}?clientname={transaction.client.person_name}&highlight_id={highlight_id}"
 
-    # If not paid or other case, redirect to homepage
+        return redirect(redirect_url)
+
     return redirect('myapp:homepage')
 
 
+
 def transactions_view(request):
+    highlight_id = request.GET.get("highlight_id")  # Get updated transaction ID
+
     all_transactions = Transaction.objects.prefetch_related('transactionitem_set').select_related('client').order_by('-created_at')
     paginator = Paginator(all_transactions, 30)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
-    return render(request, 'transaction.html', {'page_obj': page_obj})
+
+    for transaction in page_obj:
+        transaction.highlight = str(transaction.id) == str(highlight_id)
+
+    return render(request, 'transaction.html', {
+        'page_obj': page_obj,
+    })
 
 def generate_bill(request, transaction_id):
-    # Fetch the transaction and related items
     transaction = get_object_or_404(Transaction, id=transaction_id)
     items = transaction.transactionitem_set.all()
 
-    # Calculate the total price
-    total = sum(item.total_price for item in items)
-
-    # Convert the transaction date to the local timezone
+    # Local timezone conversion
     local_date = timezone.localtime(transaction.created_at)
 
-    # Prepare context for the template
     context = {
-        'date': local_date.strftime('%d/%m/%Y'),  # Use local time
+        'date': local_date.strftime('%d/%m/%Y'),
         'invoice_no': transaction.id,
         'client_name': transaction.client.person_name,
         'items': items,
-        'total': total,
+        'total_price': transaction.total_prc,
+        'total_sq_ft': transaction.total_sq_ft,
+        'advance': transaction.receiving_balance,
+        'balance': transaction.remaining_balance,
     }
+
+    return render(request, 'bill.html', context)
+
 
     # Render the bill template
     return render(request, 'bill.html', context)

@@ -1,133 +1,200 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <title>Balance</title>
-    <style>
-        tbody tr:nth-child(odd) {
-            background-color: #374151;
-        }
-        tbody tr:nth-child(even) {
-            background-color: #4b5563;
-        }
-        tbody tr:hover {
-            background-color: #6b7280;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link href="https://unpkg.com/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
+  <title>Balance</title>
+  <style>
+    tbody tr:nth-child(odd) { background-color: #374151; }
+    tbody tr:nth-child(even) { background-color: #4b5563; }
+    tbody tr:hover { background-color: #6b7280; }
+  </style>
 </head>
 <body class="min-h-screen bg-gray-900 text-gray-200">
 
-    <!-- Header -->
-    <header class="w-full text-center py-8 bg-indigo-600 text-white">
-        <h1 class="text-4xl font-bold">Blind Management System</h1>
-        <p class="text-lg mt-2">Balance</p>
-    </header>
+  <!-- Header -->
+  <header class="w-full text-center py-8 bg-indigo-600 text-white">
+    <h1 class="text-4xl font-bold">Blind Management System</h1>
+    <p class="text-lg mt-2">Balance</p>
+  </header>
 
-    <div class="container mx-auto p-6">
+  <div class="container mx-auto p-6">
 
-        <!-- Form -->
-        <div class="max-w-md mx-auto bg-gray-800 p-6 rounded-lg shadow-md">
-            <form method="POST" action="{% url 'myapp:balance' %}" class="space-y-4">
-                {% csrf_token %}
-                <div>
-                    <label for="clientname" class="block text-sm font-medium text-gray-300">Client Name</label>
-                    <input type="text" id="clientname" name="clientname" placeholder="Enter client name"
-                        class="mt-1 block w-full px-3 py-2 border border-gray-600 rounded-md shadow-sm bg-gray-700 text-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                        value="{{ client_name }}">
-                </div>
-                <div>
-                    <label for="receivingamount" class="block text-sm font-medium text-gray-300">Receiving Amount</label>
-                    <input type="text" id="receivingamount" name="receivingamount" placeholder="Enter receiving amount"
-                        inputmode="decimal" pattern="^\d+(\.\d{1,2})?$"
-                        class="mt-1 block w-full px-3 py-2 border border-gray-600 rounded-md shadow-sm bg-gray-700 text-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                </div>
-                <div>
-                    <button type="submit"
-                        class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                        Submit
-                    </button>
-                </div>
-            </form>
+    <!-- Just Completed Transaction Section -->
+    {% if just_completed %}
+    <div class="overflow-x-auto bg-white shadow-md rounded-lg mb-10">
+      <table class="min-w-full text-center">
+        <thead class="bg-blue-600 text-white">
+          <tr>
+            <th class="px-4 py-2">Date</th>
+            <th class="px-4 py-2">Customer Name</th>
+            <th class="px-4 py-2">Blind Name</th>
+            <th class="px-4 py-2">Width</th>
+            <th class="px-4 py-2">Length</th>
+            <th class="px-4 py-2">Square Foot</th>
+            <th class="px-4 py-2">Price</th>
+            <th class="px-4 py-2">Total</th>
+            <th class="px-4 py-2">Payment Status</th>
+            <th class="px-4 py-2">Actions</th>
+          </tr>
+        </thead>
+        <!-- Only the <tbody> part for just_completed block is shown -->
+        <tbody class="bg-white text-white">
+            {% for item in just_completed.items %}
+            <tr class="text-center">
+                {% if forloop.first %}
+                <td rowspan="{{ just_completed.items|length }}" class="px-4 py-2 align-top font-bold">
+                    {{ just_completed.date|date:"d/m/Y" }}
+                </td>
+                <td rowspan="{{ just_completed.items|length }}" class="px-4 py-2 align-top font-bold">
+                    {{ just_completed.client }}
+                </td>
+                {% endif %}
+                <td class="px-4 py-2">{{ item.blind.blind_name }}</td>
+                <td class="px-4 py-2">{{ item.width|floatformat:2 }}</td>
+                <td class="px-4 py-2">{{ item.length|floatformat:2 }}</td>
+                <td class="px-4 py-2">{{ item.square_foot|floatformat:2 }}</td>
+                <td class="px-4 py-2">{{ item.price|floatformat:2 }}</td>
+                <td class="px-4 py-2">{{ item.total_price|floatformat:2 }}</td>
+                {% if forloop.first %}
+                <td rowspan="{{ just_completed.items|length }}" class="px-4 py-2 align-top">
+                  <form method="POST" action="{% url 'myapp:update_payment_status' just_completed.id %}?next={% url 'myapp:balance' %}&clientname={{ just_completed.client }}&highlight_id={{ just_completed.id }}">
+                    {% csrf_token %}
+                    {% if just_completed.payment_status == "Paid" %}
+                      <span class="text-green-700 font-semibold">Paid</span>
+                    {% else %}
+                      <select name="payment_status" class="bg-white border border-gray-300 text-black rounded px-2 py-1">
+                        <option value="Pending" {% if just_completed.payment_status == "Pending" %}selected{% endif %}>Pending</option>
+                        <option value="Paid">Paid</option>
+                      </select>
+                      <button type="submit" class="mt-2 bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded">
+                        Update
+                      </button>
+                    {% endif %}
+                  </form>
+                </td>
+
+                <td rowspan="{{ just_completed.items|length }}" class="px-4 py-2 align-top space-y-2">
+              <a href="{% url 'myapp:generate_bill' just_completed.id %}" class="block bg-blue-500 hover:bg-blue-600 text-white py-1 px-3 rounded">Generate Bill</a>
+
+              {% if just_completed.payment_status != "Paid" %}
+                <a href="{% url 'myapp:update_transaction_item' just_completed.id %}?source=balance" class="block bg-yellow-500 hover:bg-yellow-600 text-white py-1 px-3 rounded">Update</a>
+              {% endif %}
+            </td>
+
+                {% endif %}
+            </tr>
+            {% endfor %}
+            <tr class="font-bold bg-gray-900 text-white">
+                <td colspan="5" class="text-right px-4 py-2">Transaction Total:</td>
+                <td class="px-4 py-2">{{ just_completed.total_sqft|floatformat:2 }}</td>
+                <td></td>
+                <td class="px-4 py-2">{{ just_completed.total_price|floatformat:2 }}</td>
+                <td colspan="2"></td>
+            </tr>
+        </tbody>
+
+      </table>
+    </div>
+    {% endif %}
+
+    <!-- Form -->
+    <div class="max-w-md mx-auto bg-gray-800 p-6 rounded-lg shadow-md">
+      <form method="POST" action="{% url 'myapp:balance' %}" class="space-y-4">
+        {% csrf_token %}
+        <div>
+          <label for="clientname" class="block text-sm font-medium text-gray-300">Client Name</label>
+          <input type="text" id="clientname" name="clientname" class="mt-1 block w-full px-3 py-2 border border-gray-600 rounded-md bg-gray-700 text-gray-200" value="{{ client_name }}" />
         </div>
-
-        <!-- Balance Summary -->
-        <div class="mt-8">
-            <div class="grid grid-cols-3 gap-4 mb-6">
-                <div class="bg-indigo-600 text-white rounded-lg p-4">
-                    <p class="text-sm">Total Balance</p>
-                    <p id="totalBalance" class="text-1xl font-bold">Rs {{ total_balance }}</p>
-                </div>
-                <div class="bg-green-600 text-white rounded-lg p-4">
-                    <p class="text-sm">Receiving Balance</p>
-                    <p id="receivingBalanceDisplay" class="text-1xl font-bold">Rs {{ receiving_balance }}</p>
-                </div>
-                <div class="bg-red-600 text-white rounded-lg p-4">
-                    <p class="text-sm">Remaining Balance</p>
-                    <p id="remainingBalance" class="text-1xl font-bold">Rs {{ remaining_balance }}</p>
-                </div>
-            </div>
+        <div>
+          <label for="receivingamount" class="block text-sm font-medium text-gray-300">Receiving Amount</label>
+          <input type="text" id="receivingamount" name="receivingamount" placeholder="Enter receiving amount" inputmode="decimal" pattern="^\d+(\.\d{1,2})?$" class="mt-1 block w-full px-3 py-2 border border-gray-600 rounded-md bg-gray-700 text-gray-200" />
         </div>
-
-        <!-- Transactions Table -->
-        <div class="bg-gray-800 rounded-lg shadow-md overflow-hidden">
-            <table class="min-w-full">
-                <thead class="bg-indigo-600 text-white">
-                    <tr>
-                        <th class="px-6 py-3 text-center text-sm font-medium uppercase">Date</th>
-                        <th class="px-6 py-3 text-center text-sm font-medium uppercase">Debit(-)</th>
-                        <th class="px-6 py-3 text-center text-sm font-medium uppercase">Credit(+)</th>
-                        <th class="px-6 py-3 text-center text-sm font-medium uppercase">Balance</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-700">
-                    {% for transaction in transactions %}
-                        <tr class="hover:bg-gray-700 transition">
-                            <td class="px-6 py-4 text-center">{{ transaction.date|date:"d-m-Y" }}</td>
-                            <td class="px-6 py-4 text-center">
-                                {% if transaction.debit > 0 %}
-                                    {{ transaction.debit|floatformat:0 }}
-                                {% else %}
-                                    -
-                                {% endif %}
-                            </td>
-                            <td class="px-6 py-4 text-center">
-                                {% if transaction.credit > 0 %}
-                                    {{ transaction.credit|floatformat:0 }}
-                                {% else %}
-                                    -
-                                {% endif %}
-                            </td>
-                            <td class="px-6 py-4 text-center">
-                                {{ transaction.balance|floatformat:0 }}
-                            </td>
-                        </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+        <div>
+          <button type="submit" class="w-full py-2 px-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-md">Submit</button>
         </div>
-
-        <!-- Message -->
-        {% if message %}
-            <div class="mt-6 text-center text-red-400 font-semibold">
-                {{ message }}
-            </div>
-        {% endif %}
-
-        <!-- Go to Homepage -->
-        <div class="mt-8 text-center">
-            <a href="http://127.0.0.1:8000/homepage/">
-                <button class="py-2 px-4 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition duration-200">
-                    Go to Homepage
-                </button>
-            </a>
-        </div>
+      </form>
     </div>
 
-    <!-- Footer -->
-    <footer class="mt-8 bg-indigo-600 text-white py-4 text-center">
-        <p>&copy; 2023 Blind Management System. All rights reserved.</p>
-    </footer>
+    <!-- Balance Summary -->
+    <div class="mt-8">
+      <div class="grid grid-cols-3 gap-4 mb-6">
+        <div class="bg-indigo-600 text-white rounded-lg p-4">
+          <p class="text-sm">Total Balance</p>
+          <p class="text-1xl font-bold">Rs {{ total_balance }}</p>
+        </div>
+        <div class="bg-green-600 text-white rounded-lg p-4">
+          <p class="text-sm">Receiving Balance</p>
+          <p class="text-1xl font-bold">Rs {{ receiving_balance }}</p>
+        </div>
+        <div class="bg-red-600 text-white rounded-lg p-4">
+          <p class="text-sm">Remaining Balance</p>
+          <p class="text-1xl font-bold">Rs {{ remaining_balance }}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Transactions Table -->
+    <div class="bg-gray-800 rounded-lg shadow-md overflow-hidden">
+      <table class="min-w-full text-white">
+        <thead class="bg-indigo-600 text-white">
+          <tr>
+            <th class="px-6 py-3 text-center text-sm font-medium uppercase">Date</th>
+            <th class="px-6 py-3 text-center text-sm font-medium uppercase">Debit(-)</th>
+            <th class="px-6 py-3 text-center text-sm font-medium uppercase">Credit(+)</th>
+            <th class="px-6 py-3 text-center text-sm font-medium uppercase">Balance</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-700">
+          {% for transaction in transactions %}
+          <tr id="{% if transaction.highlight %}highlighted{% endif %}" class="{% if transaction.highlight %}bg-yellow-500 text-white{% else %}hover:bg-gray-700{% endif %}">
+            <td class="px-6 py-4 text-center">{{ transaction.date|date:"d-m-Y" }}</td>
+            <td class="px-6 py-4 text-center">
+              {% if transaction.debit > 0 %}
+                {{ transaction.debit|floatformat:0 }}
+              {% else %}-{% endif %}
+            </td>
+            <td class="px-6 py-4 text-center">
+              {% if transaction.credit > 0 %}
+                {{ transaction.credit|floatformat:0 }}
+              {% else %}-{% endif %}
+            </td>
+            <td class="px-6 py-4 text-center">
+              {{ transaction.balance|floatformat:0 }}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Message -->
+    {% if message %}
+    <div class="mt-6 text-center text-red-400 font-semibold">{{ message }}</div>
+    {% endif %}
+
+    <!-- Go to Homepage -->
+    <div class="mt-8 text-center">
+      <a href="{% url 'myapp:homepage' %}">
+        <button class="py-2 px-4 bg-indigo-600 text-white rounded-md hover:bg-indigo-700">Go to Homepage</button>
+      </a>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="mt-8 bg-indigo-600 text-white py-4 text-center">
+    <p>&copy; 2023 Blind Management System. All rights reserved.</p>
+  </footer>
+
+  <!-- Auto-scroll to highlighted row -->
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const row = document.getElementById("highlighted");
+      if (row) {
+        row.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+    });
+  </script>
 </body>
 </html>

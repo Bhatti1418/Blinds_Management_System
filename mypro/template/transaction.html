@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://unpkg.com/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <title>Transactions</title>
     <style>
         body {
@@ -58,60 +58,66 @@
                         <th class="py-3 px-4 border">Actions</th>
                     </tr>
                 </thead>
-                <tbody>
+                 <tbody>
                     {% if page_obj %}
                         {% for transaction in page_obj %}
-                            {% for item in transaction.transactionitem_set.all %}
-                                <tr>
-                                    {% if forloop.first %}
-                                        <td class="text-center font-bold align-middle" rowspan="{{ transaction.transactionitem_set.all|length }}">
-                                            {{ transaction.created_at|date:"d/m/Y" }}
-                                        </td>
-                                        <td class="text-center font-bold align-middle" rowspan="{{ transaction.transactionitem_set.all|length }}">
-                                            {{ transaction.client.person_name }}
-                                        </td>
-                                    {% endif %}
-                                    <td class="text-center py-3 px-4">{{ item.blind.blind_name }}</td>
-                                    <td class="text-center py-3 px-4">{{ item.width }}</td>
-                                    <td class="text-center py-3 px-4">{{ item.length }}</td>
-                                    <td class="text-center py-3 px-4">{{ item.square_foot|floatformat:2 }}</td>
-                                    <td class="text-center py-3 px-4">{{ item.price }}</td>
-                                    <td class="text-center py-3 px-4">{{ item.total_price|floatformat:2 }}</td>
+                            {% with transaction.transactionitem_set.all as items %}
+                                {% for item in items %}
+                                    <tr>
+                                        {% if forloop.first %}
+                                            <td class="text-center font-bold align-middle" rowspan="{{ items|length }}">
+                                                {{ transaction.created_at|date:"d/m/Y" }}
+                                            </td>
+                                            <td class="text-center font-bold align-middle" rowspan="{{ items|length }}">
+                                                {{ transaction.client.person_name }}
+                                            </td>
+                                        {% endif %}
+                                        <td class="text-center py-3 px-4">{{ item.blind.blind_name }}</td>
+                                        <td class="text-center py-3 px-4">{{ item.width }}</td>
+                                        <td class="text-center py-3 px-4">{{ item.length }}</td>
+                                        <td class="text-center py-3 px-4">{{ item.square_foot|floatformat:2 }}</td>
+                                        <td class="text-center py-3 px-4">{{ item.price }}</td>
+                                        <td class="text-center py-3 px-4">{{ item.total_price|floatformat:2 }}</td>
 
-                                    {% if forloop.first %}
-                                        <td class="text-center align-middle py-3 px-4" rowspan="{{ transaction.transactionitem_set.all|length }}">
-                                            <form action="{% url 'myapp:update_payment_status' transaction.id %}" method="POST" class="inline-form">
-                                                {% csrf_token %}
-                                                <select name="payment_status" class="border border-gray-300 rounded px-2 py-1 {% if transaction.payment_status == 'Pending' %}pending-select{% else %}paid-select{% endif %}"
-                                                        {% if transaction.payment_status == "Paid" %}disabled{% endif %}>
-                                                    <option value="Pending" {% if transaction.payment_status == "Pending" %}selected{% endif %}>
-                                                        Pending Payment
-                                                    </option>
-                                                    <option value="Paid" {% if transaction.payment_status == "Paid" %}selected{% endif %}>
-                                                        Payment Done
-                                                    </option>
-                                                </select>
-                                                <button type="submit" class="hidden">Update</button>
-                                            </form>
-                                        </td>
-                                        <td class="text-center align-middle py-3 px-4 w-40" rowspan="{{ transaction.transactionitem_set.all|length }}">
-                                            <div class="flex flex-col items-center space-y-2">
-                                                <a href="{% url 'myapp:generate_bill' transaction.id %}" class="w-full">
-                                                    <button class="w-full py-2 px-4 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition duration-200">
-                                                        Generate Bill
-                                                    </button>
-                                                </a>
-                                                <a href="{% url 'myapp:update_transaction_item' transaction.id %}" class="w-full">
-                                                    <button class="w-full py-2 px-4 bg-amber-500 text-white rounded-md hover:bg-amber-600 transition duration-200">
+                                        {% if forloop.first %}
+                                            <td class="text-center align-middle py-3 px-4" rowspan="{{ items|length }}">
+                                                <form action="{% url 'myapp:update_payment_status' transaction.id %}" method="POST" class="inline-form">
+                                                    {% csrf_token %}
+                                                    <select name="payment_status"
+                                                            class="border border-gray-300 rounded px-2 py-1 {% if transaction.payment_status == 'Pending' %}pending-select{% else %}paid-select{% endif %}"
+                                                            {% if transaction.payment_status == "Paid" %}disabled{% endif %}>
+                                                        <option value="Pending" {% if transaction.payment_status == "Pending" %}selected{% endif %}>Pending Payment</option>
+                                                        <option value="Paid" {% if transaction.payment_status == "Paid" %}selected{% endif %}>Payment Done</option>
+                                                    </select>
+                                                    <button type="submit" class="hidden">Update</button>
+                                                </form>
+                                            </td>
+                                            <td class="text-center align-middle py-3 px-4 w-40" rowspan="{{ items|length }}">
+                                                <div class="flex flex-col items-center space-y-2">
+                                                    <a href="{% url 'myapp:generate_bill' transaction.id %}" class="w-full">
+                                                        <button class="w-full py-2 px-4 bg-blue-500 text-white rounded-md hover:bg-blue-600">Generate Bill</button>
+                                                    </a>
+                                                    <a href="{% url 'myapp:update_transaction_item' transaction.id %}?source=transactions"
+                                                       class="bg-yellow-500 hover:bg-yellow-600 text-white py-1 px-3 rounded">
                                                         Update
-                                                    </button>
-                                                </a>
-                                            </div>
-                                        </td>
-                                    {% endif %}
+                                                    </a>
+
+                                                </div>
+                                            </td>
+                                        {% endif %}
+                                    </tr>
+                                {% endfor %}
+
+                                <!-- ✅ Show total after transaction rows -->
+                                <tr class="bg-gray-100 font-semibold">
+                                    <td colspan="5" class="text-right py-2 px-4 border-t border-gray-300">Transaction Total:</td>
+                                    <td class="text-center py-2 px-4 border-t border-gray-300">{{ transaction.total_sq_ft|floatformat:2 }}</td>
+                                    <td></td>
+                                    <td class="text-center py-2 px-4 border-t border-gray-300">{{ transaction.total_prc|floatformat:2 }}</td>
+                                    <td colspan="2" class="border-t border-gray-300"></td>
                                 </tr>
-                            {% endfor %}
-                            <tr><td colspan="10" class="border-t border-gray-300"></td></tr>
+                                <tr><td colspan="10" class="border-t border-gray-300"></td></tr>
+                            {% endwith %}
                         {% endfor %}
                     {% else %}
                         <tr>
@@ -121,6 +127,8 @@
                         </tr>
                     {% endif %}
                 </tbody>
+
+
             </table>
         </div>
     </div>
@@ -144,7 +152,7 @@
 
     <!-- Homepage Button -->
     <div class="mt-8">
-        <a href="http://127.0.0.1:8000/homepage/">
+        <a href="{% url 'myapp:homepage' %}">
             <button class="py-2 px-4 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition duration-200">
                 Go to Homepage
             </button>
@@ -152,9 +160,9 @@
     </div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const paymentStatusDropdowns = document.querySelectorAll('select[name="payment_status"]');
-            paymentStatusDropdowns.forEach(dropdown => {
+        document.addEventListener('DOMContentLoaded', function () {
+            const dropdowns = document.querySelectorAll('select[name="payment_status"]');
+            dropdowns.forEach(dropdown => {
                 function updateStyles() {
                     if (dropdown.value === "Pending") {
                         dropdown.classList.add("pending-select");
@@ -165,7 +173,7 @@
                     }
                 }
                 updateStyles();
-                dropdown.addEventListener('change', function() {
+                dropdown.addEventListener('change', function () {
                     updateStyles();
                     this.closest('form').submit();
                 });

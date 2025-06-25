@@ -32,6 +32,8 @@ class Transaction(models.Model):
         choices=[('Pending', 'Payment Pending'), ('Paid', 'Payment Done')],
         default='Pending'
     )
+    total_sq_ft = models.FloatField()
+    total_prc = models.FloatField()
     total_balance = models.FloatField(default=0)
     receiving_balance = models.FloatField(default=0)
     remaining_balance = models.FloatField(default=0)
@@ -47,3 +49,4 @@ class TransactionItem(models.Model):
     square_foot = models.FloatField()
     price = models.FloatField()
     total_price = models.FloatField()
+
