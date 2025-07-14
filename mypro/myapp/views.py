@@ -18,6 +18,8 @@ from django.contrib.auth import authenticate, login
 from django.core.paginator import Paginator
 from django.urls import reverse
 from django.db.models import Sum
+from django.contrib.auth.decorators import login_required
+
 
 
 def mylogin(request):
@@ -47,7 +49,7 @@ def format_large_numbers(value):
     else:
         return f"{value:,.2f}"  # For smaller values, show with commas and 2 decimal places
 
-
+@login_required(login_url='myapp:login')
 def homepage(request):
     blinds = Blind.objects.all()
 

@@ -7,9 +7,10 @@ app_name = 'myapp'
 
 urlpatterns = [
     path('homepage/', views.homepage, name='homepage'),
-    path('', views.mylogin, name='mylogin'),
+    path('mylogin/', views.mylogin, name='mylogin'),
     path('addblind/', views.addblind, name='addblind'),
-    path('sellblind/', views.sellblind, name='sellblind'),
+    path('', views.sellblind, name='sellblind'),  # root path
+    path('sellblind/', views.sellblind, name='sellblind'),  # explicitly add this
     path('searchblind/', views.searchblind, name='searchblind'),
     path('transactions/', views.transactions_view, name='transactions'),
     path('update/<int:pk>/', views.update_item, name='update_item'),
@@ -20,5 +21,4 @@ urlpatterns = [
     path('get-blind-quantity/', views.get_blind_quantity, name='get_blind_quantity'),
     path('balance/', views.balance_view, name='balance'),
     path('update-item/<int:pk>/', views.update_transaction_item, name='update_transaction_item'),
-
 ]
