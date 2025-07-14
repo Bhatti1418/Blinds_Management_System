@@ -1,99 +1,136 @@
 <!doctype html>
 <html lang="en">
-
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href="https://unpkg.com/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Sell Blind</title>
+    <link href="https://unpkg.com/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <style>
         body {
             background: url('https://decorland.co.za/wp-content/uploads/2021/09/Vertical-Blinds-1-scaled.jpeg') no-repeat center center fixed;
             background-size: cover;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
     </style>
 </head>
+<body class="bg-black bg-opacity-50 h-screen flex">
 
-<body class="bg-black bg-opacity-50 flex items-center justify-center h-screen relative">
-
-    <!-- Message Container -->
-    <div id="message" class="hidden fixed top-4 left-1/2 transform -translate-x-1/2 bg-red-500 text-white px-6 py-3 rounded-md shadow-lg">
-        <span id="messageText"></span>
-    </div>
-
-    <!-- Form Container -->
-    <div
-        class="bg-white bg-opacity-40 shadow-lg shadow-black/50 backdrop-blur-sm p-8 rounded-lg max-w-lg w-full mx-4 md:mx-0">
-        <p class="text-4xl font-semibold text-center mb-8">Blind Info</p>
-        <form id="blindForm">
-            {% csrf_token %}
-
-            <div class="grid grid-cols-2 gap-4">
-                <div class="relative">
-                    <label for="clientname" class="text-lg text-gray-800">Client Name</label>
-                    <input type="text" id="clientname" name="clientname" placeholder="Enter client name" required
-                        class="border placeholder-gray-400 focus:outline-none focus:border-indigo-500 w-full py-3 px-4 text-lg bg-white border-gray-300 rounded-md" />
-                </div>
-
-                <div class="relative">
-                    <label for="blindname" class="text-lg text-gray-800">Blind Name</label>
-                    <select id="blindname" name="blindname"
-                        class="border text-gray-400 focus:outline-none focus:border-indigo-500 w-full py-3 px-4 text-lg bg-white border-gray-300 rounded-md">
-                        <option value="">Select option</option>
-                    </select>
-                </div>
-
-                <div class="relative">
-                    <label for="length" class="text-lg text-gray-800">Width</label>
-                    <input type="number" id="length" name="length" placeholder="Enter length" required
-                        class="border placeholder-gray-400 focus:outline-none focus:border-indigo-500 w-full py-3 px-4 text-lg bg-white border-gray-300 rounded-md" />
-                </div>
-
-                <div class="relative">
-                    <label for="width" class="text-lg text-gray-800">Length</label>
-                    <input type="number" id="width" name="width" placeholder="Enter width" required
-                        class="border placeholder-gray-400 focus:outline-none focus:border-indigo-500 w-full py-3 px-4 text-lg bg-white border-gray-300 rounded-md" />
-                </div>
-            </div>
-
-            <!-- Buttons in the same row -->
-            <div class="flex justify-between mt-6">
-                <button type="button" id="addBlind"
-                    class="w-1/2 py-3 px-4 text-lg font-medium text-white bg-blue-500 rounded-md transition duration-200 hover:bg-blue-600 mr-2">
+    <!-- Sidebar -->
+    <aside class="w-72 bg-gradient-to-b from-gray-100 via-gray-200 to-gray-300 text-gray-800 flex-shrink-0 h-full shadow-xl border-r border-gray-400">
+    <div class="p-6">
+        <h1 class="text-2xl font-bold uppercase text-gray-700 mb-4 text-center">Blinds System</h1>
+        <p class="text-sm text-gray-600 mb-6 text-center">Manage your inventory</p>
+        <ul class="space-y-3">
+            <li>
+                <a href="http://127.0.0.1:8000/homepage/"
+                    class="block px-4 py-2 rounded-md bg-white hover:bg-gray-100 transition border border-gray-300 shadow-sm text-center">
+                    Admin Page
+                </a>
+            </li>
+            <li>
+                <a href="http://127.0.0.1:8000/transactions/"
+                    class="block px-4 py-2 rounded-md bg-white hover:bg-gray-100 transition border border-gray-300 shadow-sm text-center">
+                    Transactions
+                </a>
+            </li>
+            <li>
+                <a href="http://127.0.0.1:8000/addblind/"
+                    class="block px-4 py-2 rounded-md bg-white hover:bg-gray-100 transition border border-gray-300 shadow-sm text-center">
                     Add Blind
-                </button>
-                <button type="button" id="completeTransaction"
-                    class="w-1/2 py-3 px-4 text-lg font-medium text-white bg-green-500 rounded-md transition duration-200 hover:bg-green-600">
-                    Complete Transaction
-                </button>
+                </a>
+            </li>
+            <li>
+                <a href="http://127.0.0.1:8000/searchblind/"
+                    class="block px-4 py-2 rounded-md bg-white hover:bg-gray-100 transition border border-gray-300 shadow-sm text-center">
+                    Search Blind
+                </a>
+            </li>
+            <li>
+                <a href="http://127.0.0.1:8000/search-transaction/"
+                    class="block px-4 py-2 rounded-md bg-white hover:bg-gray-100 transition border border-gray-300 shadow-sm text-center">
+                    Search Transaction
+                </a>
+            </li>
+            <li>
+                <a href="http://127.0.0.1:8000/balance/"
+                    class="block px-4 py-2 rounded-md bg-white hover:bg-gray-100 transition border border-gray-300 shadow-sm text-center">
+                    Search Balance
+                </a>
+            </li>
+        </ul>
+    </div>
+</aside>
+    <!-- Main Content -->
+    <div class="flex-grow flex items-center justify-center px-6">
+        <div class="bg-white bg-opacity-30 backdrop-blur-lg shadow-2xl rounded-xl p-10 w-full max-w-2xl">
+            <h2 class="text-4xl font-bold text-center text-black mb-10 tracking-wide">Sell Blind</h2>
+            <form id="blindForm">
+                {% csrf_token %}
+                <div class="grid grid-cols-2 gap-6">
+                    <div>
+                        <label for="clientname" class="text-black text-sm mb-1 block">Client Name</label>
+                        <input type="text" id="clientname" name="clientname" placeholder="Enter client name" required
+                               class="w-full px-4 py-3 rounded-lg border border-gray-300 bg-white focus:outline-none focus:ring-2 focus:ring-blue-400 text-gray-800" />
+                    </div>
+                    <div>
+                        <label for="blindname" class="text-black text-sm mb-1 block">Blind Name</label>
+                        <select id="blindname" name="blindname"
+                                class="w-full px-4 py-3 rounded-lg border border-gray-300 bg-white text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-400">
+                            <option value="">Select option</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="length" class="text-black text-sm mb-1 block">Width</label>
+                        <input type="number" id="length" name="length" placeholder="Enter width" required
+                               class="w-full px-4 py-3 rounded-lg border border-gray-300 bg-white text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-400" />
+                    </div>
+                    <div>
+                        <label for="width" class="text-black text-sm mb-1 block">Length</label>
+                        <input type="number" id="width" name="width" placeholder="Enter length" required
+                               class="w-full px-4 py-3 rounded-lg border border-gray-300 bg-white text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-400" />
+                    </div>
+                </div>
+                <div class="flex gap-4 mt-8">
+                    <button type="button" id="addBlind"
+                            class="w-1/2 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-lg shadow-md transition-all">
+                        Add Blind
+                    </button>
+                    <button type="button" id="completeTransaction"
+                            class="w-1/2 bg-green-600 hover:bg-green-700 text-white font-semibold py-3 rounded-lg shadow-md transition-all">
+                        Complete Transaction
+                    </button>
+                </div>
+            </form>
+
+            <!-- Error Message -->
+            <div id="message" class="hidden fixed top-6 left-1/2 transform -translate-x-1/2 bg-red-600 text-white px-6 py-3 rounded-lg shadow-lg mt-6">
+                <span id="messageText"></span>
             </div>
-        </form>
 
-        <!-- Blind List Section -->
-        <div id="blindList" class="mt-8 hidden">
-            <h2 class="text-2xl font-semibold text-center">Blinds Added</h2>
-            <table class="w-full border-collapse border border-gray-400 mt-4">
-                <thead>
-                    <tr class="bg-gray-300 text-gray-800">
-                        <th class="border border-gray-400 px-4 py-2">Client Name</th>
-                        <th class="border border-gray-400 px-4 py-2">Blind Name</th>
-                        <th class="border border-gray-400 px-4 py-2">Width</th>
-                        <th class="border border-gray-400 px-4 py-2">Length</th>
-                    </tr>
-                </thead>
-                <tbody id="blindItems" class="bg-white text-gray-900"></tbody>
-            </table>
+            <!-- Blind List -->
+            <div id="blindList" class="mt-10 hidden">
+                <h3 class="text-xl text-white font-semibold text-center mb-4">Blinds Added</h3>
+                <table class="w-full bg-white rounded-lg overflow-hidden shadow-lg">
+                    <thead class="bg-blue-100 text-gray-800">
+                        <tr>
+                            <th class="py-2 px-4 border-b">Client Name</th>
+                            <th class="py-2 px-4 border-b">Blind Name</th>
+                            <th class="py-2 px-4 border-b">Width</th>
+                            <th class="py-2 px-4 border-b">Length</th>
+                        </tr>
+                    </thead>
+                    <tbody id="blindItems" class="text-center text-gray-900"></tbody>
+                </table>
+            </div>
         </div>
-
     </div>
 
+    <!-- Script -->
     <script>
         document.addEventListener("DOMContentLoaded", function () {
             fetch("/get-sales-data/")
                 .then(response => response.json())
-                .then(data => {
-                    populateDropdown("blindname", data.blinds);
-                })
+                .then(data => populateDropdown("blindname", data.blinds))
                 .catch(error => console.error("Error fetching data:", error));
         });
 
@@ -110,51 +147,37 @@
 
         document.querySelectorAll("select").forEach(select => {
             select.addEventListener("change", function () {
-                if (this.value) {
-                    this.classList.remove("text-gray-400");
-                    this.classList.add("text-black");
-                } else {
-                    this.classList.remove("text-black");
-                    this.classList.add("text-gray-400");
-                }
+                this.classList.remove("text-gray-500");
+                this.classList.add("text-black");
             });
         });
 
         let blinds = [];
         document.getElementById('addBlind').addEventListener('click', function () {
-            let clientName = document.getElementById('clientname').value.toUpperCase(); // Convert to uppercase
+            let clientName = document.getElementById('clientname').value.toUpperCase();
             let blindName = document.getElementById('blindname').value;
             let length = parseFloat(document.getElementById('length').value);
             let width = parseFloat(document.getElementById('width').value);
 
-            if (!clientName) {
-                alert("Please enter a client name.");
+            if (!clientName || !blindName || !length || !width) {
+                alert("Please complete all fields.");
                 return;
             }
 
-            if (!blindName || !length || !width) {
-                alert("Fill all blind details.");
-                return;
-            }
-
-            // Fetch the available quantity for the selected blind
             fetch(`/get-blind-quantity/?blind_name=${encodeURIComponent(blindName)}`)
                 .then(response => response.json())
                 .then(data => {
                     const availableQuantity = data.remaining_quantity;
                     const requiredQuantity = (length / 12) * (width / 12);
-
                     if (requiredQuantity > availableQuantity) {
-                        // Show the message at the top of the page
                         document.getElementById('messageText').textContent = "Not enough quantity available.";
                         document.getElementById('message').classList.remove('hidden');
                         setTimeout(() => {
                             document.getElementById('message').classList.add('hidden');
-                        }, 3000); // Hide the message after 3 seconds
+                        }, 3000);
                         return;
                     }
 
-                    // If enough quantity is available, proceed to add the blind
                     blinds.push({ clientName, blindName, length, width });
 
                     if (blinds.length === 1) {
@@ -163,19 +186,16 @@
 
                     let row = document.createElement('tr');
                     row.innerHTML = `
-                        <td>${clientName}</td>
-                        <td>${blindName}</td>
-                        <td>${length}</td>
-                        <td>${width}</td>
-                    `;
+                        <td class="py-2 border-b">${clientName}</td>
+                        <td class="py-2 border-b">${blindName}</td>
+                        <td class="py-2 border-b">${length}</td>
+                        <td class="py-2 border-b">${width}</td>`;
                     document.getElementById('blindItems').appendChild(row);
 
-                    // Clear input fields after adding the row
                     document.getElementById('blindname').value = "";
                     document.getElementById('length').value = "";
                     document.getElementById('width').value = "";
-                })
-                .catch(error => console.error("Error fetching blind quantity:", error));
+                });
         });
 
         document.getElementById('completeTransaction').addEventListener('click', function () {
@@ -199,11 +219,9 @@
                     } else {
                         window.location.href = data.redirect_url;
                     }
-                })
-                .catch(error => console.error("Error:", error));
+                });
         });
     </script>
 
 </body>
-
 </html>
