@@ -143,6 +143,17 @@
         </div>
         </div>
       </div>
+        <!-- 🔍 Search Bar -->
+       <!-- 🔍 Centered Search Bar -->
+        <div class="flex justify-center mt-6">
+          <input
+            type="text"
+            id="liveSearch"
+            placeholder="Search by blind name..."
+            class="w-1/3 p-2 border border-gray-300 rounded shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+          />
+        </div>
+
 
     <!-- Items Table -->
       <div class="mt-12 grid grid-cols-1 gap-6 xl:grid-cols-3">
@@ -229,5 +240,26 @@
     </div>
   </div>
 </div>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const searchInput = document.getElementById('liveSearch');
+    const rows = document.querySelectorAll('tbody tr');
+
+    searchInput.addEventListener('input', function () {
+      const term = this.value.toLowerCase();
+
+      rows.forEach(row => {
+        const blindName = row.querySelector('td')?.textContent.toLowerCase();
+        if (blindName && blindName.includes(term)) {
+          row.style.display = '';
+        } else {
+          row.style.display = 'none';
+        }
+      });
+    });
+  });
+</script>
+
+
 </body>
 </html>

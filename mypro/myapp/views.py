@@ -490,18 +490,23 @@ def update_payment_status(request, id):
 
 
 def transactions_view(request):
-    highlight_id = request.GET.get("highlight_id")  # Get updated transaction ID
+    query = request.GET.get('q', '').strip()
+    all_transactions = Transaction.objects.prefetch_related('transactionitem_set').select_related('client')
 
-    all_transactions = Transaction.objects.prefetch_related('transactionitem_set').select_related('client').order_by('-created_at')
-    paginator = Paginator(all_transactions, 30)
+    if query:
+        all_transactions = all_transactions.filter(
+            Q(client__person_name__icontains=query)
+        )
+
+    all_transactions = all_transactions.order_by('-created_at')
+
+    paginator = Paginator(all_transactions, 30)  # 30 per page
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
-    for transaction in page_obj:
-        transaction.highlight = str(transaction.id) == str(highlight_id)
-
     return render(request, 'transaction.html', {
         'page_obj': page_obj,
+        'query': query,
     })
 
 def generate_bill(request, transaction_id):
