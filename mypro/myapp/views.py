@@ -1,10 +1,7 @@
-from datetime import datetime  # Import datetime to handle date parsing
-from .models import Blind
-from django.shortcuts import render, redirect
-from email.policy import default
+
 import json
 from django.shortcuts import render, HttpResponse, redirect, get_object_or_404
-from django.urls import reverse
+
 from django.db.models import Q
 from django.contrib.auth.models import User
 from .models import Client, Blind, Transaction, User, TransactionItem
@@ -19,6 +16,7 @@ from django.core.paginator import Paginator
 from django.urls import reverse
 from django.db.models import Sum
 from django.contrib.auth.decorators import login_required
+from django.views.decorators.cache import never_cache
 
 
 
@@ -49,6 +47,8 @@ def format_large_numbers(value):
     else:
         return f"{value:,.2f}"  # For smaller values, show with commas and 2 decimal places
 
+
+@never_cache
 @login_required(login_url='myapp:login')
 def homepage(request):
     blinds = Blind.objects.all()
@@ -195,7 +195,11 @@ def update_transaction_item(request, pk):
     return render(request, 'updating_transaction.html', {'transaction': transaction, 'items': items})
 
 
-
+def delete_transaction(request, id):
+    transaction = get_object_or_404(Transaction, id=id)
+    if request.method == "POST":
+        transaction.delete()
+        return redirect('myapp:transactions')
 
 def get_sales_data(request):
     return JsonResponse({
